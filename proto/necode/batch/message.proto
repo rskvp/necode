@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package necode.batch;
+
+import "necode/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "necode/common/message.proto";
+import "necode/enums/batch_operation.proto";
+import "necode/enums/reset.proto";
+
+message BatchOperationInfo {
+  // Batch job ID
+  string job_id = 1;
+  // Batch operation state
+  necode.enums.BatchOperationState state = 2;
+  // Batch operation start time
+  google.protobuf.Timestamp start_time = 3 [(gogoproto.stdtime) = true];
+  // Batch operation close time
+  google.protobuf.Timestamp close_time = 4 [(gogoproto.stdtime) = true];
+}
+
+// BatchOperationTermination sends terminate requests to batch workflows.
+// Keep the parameter in sync with necode.workflowservice.TerminateWorkflowExecutionRequest.
+// Ignore first_execution_run_id because this is used for single workflow operation.
+message BatchOperationTermination {
+  // Serialized value(s) to provide to the termination event
+  necode.common.Payloads details = 1;
+  // The identity of the worker/client
+  string identity = 2;
+}
+
+// BatchOperationSignal sends signals to batch workflows.
+// Keep the parameter in sync with necode.workflowservice.SignalWorkflowExecutionRequest.
+message BatchOperationSignal {
+  // The workflow author-defined name of the signal to send to the workflow
+  string signal = 1;
+  // Serialized value(s) to provide with the signal
+  necode.common.Payloads input = 2;
+  // Headers that are passed with the signal to the processing workflow.
+  // These can include things like auth or tracing tokens.
+  necode.common.Header header = 3;
+  // The identity of the worker/client
+  string identity = 4;
+}
+
+// BatchOperationCancellation sends cancel requests to batch workflows.
+// Keep the parameter in sync with necode.workflowservice.RequestCancelWorkflowExecutionRequest.
+// Ignore first_execution_run_id because this is used for single workflow operation.
+message BatchOperationCancellation {
+  // The identity of the worker/client
+  string identity = 1;
+}
+
+// BatchOperationDeletion sends deletion requests to batch workflows.
+// Keep the parameter in sync with necode.workflowservice.DeleteWorkflowExecutionRequest.
+message BatchOperationDeletion {
+  // The identity of the worker/client
+  string identity = 1;
+}
+
+// BatchOperationReset sends reset requests to batch workflows.
+// Keep the parameter in sync with necode.workflowservice.ResetWorkflowExecutionRequest.
+message BatchOperationReset {
+  // Reset type.
+  necode.enums.ResetType reset_type = 1; 
+  // History event reapply options.
+  necode.enums.ResetReapplyType reset_reapply_type = 2; 
+  // The identity of the worker/client.
+  string identity = 3;
+}

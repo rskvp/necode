@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package necode.enums;
+
+enum QueryResultType {
+    QUERY_RESULT_TYPE_UNSPECIFIED = 0;
+    QUERY_RESULT_TYPE_ANSWERED = 1;
+    QUERY_RESULT_TYPE_FAILED = 2;
+}
+
+enum QueryRejectCondition {
+    QUERY_REJECT_CONDITION_UNSPECIFIED = 0;
+    // None indicates that query should not be rejected.
+    QUERY_REJECT_CONDITION_NONE = 1;
+    // NotOpen indicates that query should be rejected if workflow is not open.
+    QUERY_REJECT_CONDITION_NOT_OPEN = 2;
+    // NotCompletedCleanly indicates that query should be rejected if workflow did not complete cleanly.
+    QUERY_REJECT_CONDITION_NOT_COMPLETED_CLEANLY = 3;
+}
+
+

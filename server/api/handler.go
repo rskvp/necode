@@ -26,14 +26,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gogo/gateway"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	"github.com/rskvp/necode/api/operatorservice/v1"
-	"github.com/rskvp/necode/api/workflowservice/v1"
+	"github.com/rskvp/necode/proto/gen/necode/operatorservice"
+	"github.com/rskvp/necode/proto/gen/necode/workflowservice"
 	"github.com/rskvp/necode/server/auth"
 	"github.com/rskvp/necode/server/config"
 	"github.com/rskvp/necode/server/rpc"
@@ -144,18 +143,10 @@ func GetSettings(cfgProvider *config.ConfigProviderWithRefresh) func(echo.Contex
 
 func getTemporalClientMux(c echo.Context, temporalConn *grpc.ClientConn, apiMiddleware []Middleware) (*runtime.ServeMux, error) {
 	var muxOpts []runtime.ServeMuxOption
-	for _, m := range apiMiddleware {
-		muxOpts = append(muxOpts, m(c))
-	}
 
 	tMux := runtime.NewServeMux(
-		append(muxOpts,
-			withMarshaler(),
-			version.WithVersionHeader(c),
-			// This is necessary to get error details properly
-			// marshalled in unary requests.
-			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
-		)...,
+		append(muxOpts)..., // This is necessary to get error details properly
+
 	)
 
 	if wfErr := workflowservice.RegisterWorkflowServiceHandler(context.Background(), tMux, temporalConn); wfErr != nil {
@@ -166,14 +157,4 @@ func getTemporalClientMux(c echo.Context, temporalConn *grpc.ClientConn, apiMidd
 		return nil, opErr
 	}
 	return tMux, nil
-}
-
-func withMarshaler() runtime.ServeMuxOption {
-	jsonpb := &gateway.JSONPb{
-		EmitDefaults: true,
-		Indent:       "  ",
-		OrigName:     false,
-	}
-
-	return runtime.WithMarshalerOption(runtime.MIMEWildcard, jsonpb)
 }

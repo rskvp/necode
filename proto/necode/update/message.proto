@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package necode.update;
+
+import "necode/common/message.proto";
+import "necode/enums/update.proto";
+import "necode/failure/message.proto";
+
+// Specifies to the gRPC server how long the client wants the an update-related
+// RPC call to wait before returning control to the caller.
+message WaitPolicy {
+
+    // Indicates the update lifecycle stage that the gRPC call should wait for
+    // before returning.
+    necode.enums.UpdateWorkflowExecutionLifecycleStage lifecycle_stage = 1;
+}
+
+// The data needed by a client to refer to an previously invoked workflow
+// execution update process.
+message UpdateRef {
+    necode.common.WorkflowExecution workflow_execution = 1;
+    string update_id = 2;
+}
+
+// The outcome of a workflow update - success or failure.
+message Outcome {
+    oneof value {
+        necode.common.Payloads success = 1;
+        necode.failure.Failure failure = 2;
+    }
+}
+
+// Metadata about a workflow execution update.
+message Meta {
+    // An ID with workflow-scoped uniqueness for this update
+    string update_id = 1;
+
+    // A string identifying the agent that requested this update.
+    string identity = 2;
+}
+
+message Input {
+    // Headers that are passed with the update from the requesting entity.
+    // These can include things like auth or tracing tokens.
+    necode.common.Header header = 1;
+
+    // The name of the input handler to invoke on the target workflow
+    string name = 2;
+
+    // The arguments to pass to the named handler.
+    necode.common.Payloads args = 3;
+}
+
+// The client request that triggers a workflow execution update
+message Request {
+    Meta meta = 1;
+    Input input = 2;
+}
+
+// An update protocol message indicating that a workflow execution update has
+// been rejected.
+message Rejection {
+    string rejected_request_message_id = 1;
+    int64 rejected_request_sequencing_event_id = 2;
+    Request rejected_request = 3;
+    necode.failure.Failure failure = 4;
+}
+
+// An update protocol message indicating that a workflow execution update has
+// been accepted (i.e. passed the worker-side validation phase).
+message Acceptance {
+    string accepted_request_message_id = 1;
+    int64 accepted_request_sequencing_event_id = 2;
+    Request accepted_request = 3;
+}
+
+// An update protocol message indicating that a workflow execution update has
+// completed with the contained outcome.
+message Response {
+    Meta meta = 1;
+    Outcome outcome = 2;
+}

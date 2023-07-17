@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package necode.filter;
+
+import "google/protobuf/timestamp.proto";
+
+import "necode/gogoproto/gogo.proto";
+
+import "necode/enums/workflow.proto";
+
+message WorkflowExecutionFilter {
+    string workflow_id = 1;
+    string run_id = 2;
+}
+
+message WorkflowTypeFilter {
+    string name = 1;
+}
+
+message StartTimeFilter {
+    google.protobuf.Timestamp earliest_time = 1 [(gogoproto.stdtime) = true];
+    google.protobuf.Timestamp latest_time = 2 [(gogoproto.stdtime) = true];
+}
+
+message StatusFilter {
+    necode.enums.WorkflowExecutionStatus status = 1;
+}

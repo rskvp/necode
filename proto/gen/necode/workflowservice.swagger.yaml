@@ -1,0 +1,4445 @@
+swagger: "2.0"
+info:
+  title: necode/workflowservice/request_response.proto
+  version: version not set
+tags:
+  - name: WorkflowService
+consumes:
+  - application/json
+produces:
+  - application/json
+paths: {}
+definitions:
+  GetSystemInfoResponseCapabilities:
+    type: object
+    properties:
+      signalAndQueryHeader:
+        type: boolean
+        description: True if signal and query headers are supported.
+      internalErrorDifferentiation:
+        type: boolean
+        description: |-
+          True if internal errors are differentiated from other types of errors for purposes of
+          retrying non-internal errors.
+
+          When unset/false, clients retry all failures. When true, clients should only retry
+          non-internal errors.
+      activityFailureIncludeHeartbeat:
+        type: boolean
+        title: True if RespondActivityTaskFailed API supports including heartbeat details
+      supportsSchedules:
+        type: boolean
+        description: Supports scheduled workflow features.
+      encodedFailureAttributes:
+        type: boolean
+        title: True if server uses protos that include necode.failure.Failure.encoded_attributes
+      buildIdBasedVersioning:
+        type: boolean
+        title: |-
+          True if server supports dispatching Workflow and Activity tasks based on a worker's build_id
+          (see:
+          https://github.com/temporalio/proposals/blob/a123af3b559f43db16ea6dd31870bfb754c4dc5e/versioning/worker-versions.md)
+      upsertMemo:
+        type: boolean
+        title: True if server supports upserting workflow memo
+      eagerWorkflowStart:
+        type: boolean
+        title: True if server supports eager workflow task dispatching for the StartWorkflowExecution API
+      sdkMetadata:
+        type: boolean
+        title: |-
+          True if the server knows about the sdk metadata field on WFT completions and will record
+          it in history
+    description: System capability details.
+  UpdateWorkerBuildIdCompatibilityRequestAddNewCompatibleVersion:
+    type: object
+    properties:
+      newBuildId:
+        type: string
+        description: A new id to be added to an existing compatible set.
+      existingCompatibleBuildId:
+        type: string
+        description: |-
+          A build id which must already exist in the version sets known by the task queue. The new
+          id will be stored in the set containing this id, marking it as compatible with
+          the versions within.
+      makeSetDefault:
+        type: boolean
+        description: |-
+          When set, establishes the compatible set being targeted as the overall default for the
+          queue. If a different set was the current default, the targeted set will replace it as
+          the new default.
+  UpdateWorkerBuildIdCompatibilityRequestMergeSets:
+    type: object
+    properties:
+      primarySetBuildId:
+        type: string
+        title: A build ID in the set whose default will become the merged set default
+      secondarySetBuildId:
+        type: string
+        title: A build ID in the set which will be merged into the primary set
+  batchBatchOperationCancellation:
+    type: object
+    properties:
+      identity:
+        type: string
+        title: The identity of the worker/client
+    description: |-
+      BatchOperationCancellation sends cancel requests to batch workflows.
+      Keep the parameter in sync with necode.workflowservice.RequestCancelWorkflowExecutionRequest.
+      Ignore first_execution_run_id because this is used for single workflow operation.
+  batchBatchOperationDeletion:
+    type: object
+    properties:
+      identity:
+        type: string
+        title: The identity of the worker/client
+    description: |-
+      BatchOperationDeletion sends deletion requests to batch workflows.
+      Keep the parameter in sync with necode.workflowservice.DeleteWorkflowExecutionRequest.
+  batchBatchOperationInfo:
+    type: object
+    properties:
+      jobId:
+        type: string
+        title: Batch job ID
+      state:
+        $ref: '#/definitions/enumsBatchOperationState'
+        title: Batch operation state
+      startTime:
+        type: string
+        format: date-time
+        title: Batch operation start time
+      closeTime:
+        type: string
+        format: date-time
+        title: Batch operation close time
+  batchBatchOperationReset:
+    type: object
+    properties:
+      resetType:
+        $ref: '#/definitions/enumsResetType'
+        description: Reset type.
+      resetReapplyType:
+        $ref: '#/definitions/enumsResetReapplyType'
+        description: History event reapply options.
+      identity:
+        type: string
+        description: The identity of the worker/client.
+    description: |-
+      BatchOperationReset sends reset requests to batch workflows.
+      Keep the parameter in sync with necode.workflowservice.ResetWorkflowExecutionRequest.
+  batchBatchOperationSignal:
+    type: object
+    properties:
+      signal:
+        type: string
+        title: The workflow author-defined name of the signal to send to the workflow
+      input:
+        $ref: '#/definitions/commonPayloads'
+        title: Serialized value(s) to provide with the signal
+      header:
+        $ref: '#/definitions/commonHeader'
+        description: |-
+          Headers that are passed with the signal to the processing workflow.
+          These can include things like auth or tracing tokens.
+      identity:
+        type: string
+        title: The identity of the worker/client
+    description: |-
+      BatchOperationSignal sends signals to batch workflows.
+      Keep the parameter in sync with necode.workflowservice.SignalWorkflowExecutionRequest.
+  batchBatchOperationTermination:
+    type: object
+    properties:
+      details:
+        $ref: '#/definitions/commonPayloads'
+        title: Serialized value(s) to provide to the termination event
+      identity:
+        type: string
+        title: The identity of the worker/client
+    description: |-
+      BatchOperationTermination sends terminate requests to batch workflows.
+      Keep the parameter in sync with necode.workflowservice.TerminateWorkflowExecutionRequest.
+      Ignore first_execution_run_id because this is used for single workflow operation.
+  commandCancelTimerCommandAttributes:
+    type: object
+    properties:
+      timerId:
+        type: string
+        title: The same timer id from the start timer command
+  commandCancelWorkflowExecutionCommandAttributes:
+    type: object
+    properties:
+      details:
+        $ref: '#/definitions/commonPayloads'
+  commandCommand:
+    type: object
+    properties:
+      commandType:
+        $ref: '#/definitions/enumsCommandType'
+      scheduleActivityTaskCommandAttributes:
+        $ref: '#/definitions/commandScheduleActivityTaskCommandAttributes'
+      startTimerCommandAttributes:
+        $ref: '#/definitions/commandStartTimerCommandAttributes'
+      completeWorkflowExecutionCommandAttributes:
+        $ref: '#/definitions/commandCompleteWorkflowExecutionCommandAttributes'
+      failWorkflowExecutionCommandAttributes:
+        $ref: '#/definitions/commandFailWorkflowExecutionCommandAttributes'
+      requestCancelActivityTaskCommandAttributes:
+        $ref: '#/definitions/commandRequestCancelActivityTaskCommandAttributes'
+      cancelTimerCommandAttributes:
+        $ref: '#/definitions/commandCancelTimerCommandAttributes'
+      cancelWorkflowExecutionCommandAttributes:
+        $ref: '#/definitions/commandCancelWorkflowExecutionCommandAttributes'
+      requestCancelExternalWorkflowExecutionCommandAttributes:
+        $ref: '#/definitions/commandRequestCancelExternalWorkflowExecutionCommandAttributes'
+      recordMarkerCommandAttributes:
+        $ref: '#/definitions/commandRecordMarkerCommandAttributes'
+      continueAsNewWorkflowExecutionCommandAttributes:
+        $ref: '#/definitions/commandContinueAsNewWorkflowExecutionCommandAttributes'
+      startChildWorkflowExecutionCommandAttributes:
+        $ref: '#/definitions/commandStartChildWorkflowExecutionCommandAttributes'
+      signalExternalWorkflowExecutionCommandAttributes:
+        $ref: '#/definitions/commandSignalExternalWorkflowExecutionCommandAttributes'
+      upsertWorkflowSearchAttributesCommandAttributes:
+        $ref: '#/definitions/commandUpsertWorkflowSearchAttributesCommandAttributes'
+      protocolMessageCommandAttributes:
+        $ref: '#/definitions/commandProtocolMessageCommandAttributes'
+      modifyWorkflowPropertiesCommandAttributes:
+        $ref: '#/definitions/commandModifyWorkflowPropertiesCommandAttributes'
+        title: 16 is available for use - it was used as part of a prototype that never made it into a release
+  commandCompleteWorkflowExecutionCommandAttributes:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/commonPayloads'
+  commandContinueAsNewWorkflowExecutionCommandAttributes:
+    type: object
+    properties:
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      input:
+        $ref: '#/definitions/commonPayloads'
+      workflowRunTimeout:
+        type: string
+        description: Timeout of a single workflow run.
+      workflowTaskTimeout:
+        type: string
+        description: Timeout of a single workflow task.
+      backoffStartInterval:
+        type: string
+        description: How long the workflow start will be delayed - not really a "backoff" in the traditional sense.
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+      initiator:
+        $ref: '#/definitions/enumsContinueAsNewInitiator'
+        title: Should be removed
+      failure:
+        $ref: '#/definitions/failureFailure'
+        title: Should be removed
+      lastCompletionResult:
+        $ref: '#/definitions/commonPayloads'
+        title: Should be removed
+      cronSchedule:
+        type: string
+        description: Should be removed. Not necessarily unused but unclear and not exposed by SDKs.
+      header:
+        $ref: '#/definitions/commonHeader'
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      useCompatibleVersion:
+        type: boolean
+        description: |-
+          If this is set, the workflow executing this command wishes to continue as new using a version
+          compatible with the version that this workflow most recently ran on.
+  commandFailWorkflowExecutionCommandAttributes:
+    type: object
+    properties:
+      failure:
+        $ref: '#/definitions/failureFailure'
+  commandModifyWorkflowPropertiesCommandAttributes:
+    type: object
+    properties:
+      upsertedMemo:
+        $ref: '#/definitions/commonMemo'
+        description: |-
+          If set, update the workflow memo with the provided values. The values will be merged with
+          the existing memo. If the user wants to delete values, a default/empty Payload should be
+          used as the value for the key being deleted.
+  commandProtocolMessageCommandAttributes:
+    type: object
+    properties:
+      messageId:
+        type: string
+        description: The message ID of the message to which this command is a pointer.
+  commandRecordMarkerCommandAttributes:
+    type: object
+    properties:
+      markerName:
+        type: string
+      details:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/commonPayloads'
+      header:
+        $ref: '#/definitions/commonHeader'
+      failure:
+        $ref: '#/definitions/failureFailure'
+  commandRequestCancelActivityTaskCommandAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        description: The `ACTIVITY_TASK_SCHEDULED` event id for the activity being cancelled.
+  commandRequestCancelExternalWorkflowExecutionCommandAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+      workflowId:
+        type: string
+      runId:
+        type: string
+      control:
+        type: string
+        description: Deprecated.
+      childWorkflowOnly:
+        type: boolean
+        description: |-
+          Set this to true if the workflow being cancelled is a child of the workflow originating this
+          command. The request will be rejected if it is set to true and the target workflow is *not*
+          a child of the requesting workflow.
+      reason:
+        type: string
+        title: Reason for requesting the cancellation
+  commandScheduleActivityTaskCommandAttributes:
+    type: object
+    properties:
+      activityId:
+        type: string
+      activityType:
+        $ref: '#/definitions/commonActivityType'
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      header:
+        $ref: '#/definitions/commonHeader'
+      input:
+        $ref: '#/definitions/commonPayloads'
+      scheduleToCloseTimeout:
+        type: string
+        description: |-
+          Indicates how long the caller is willing to wait for activity completion. The "schedule" time
+          is when the activity is initially scheduled, not when the most recent retry is scheduled.
+          Limits how long retries will be attempted. Either this or `start_to_close_timeout` must be
+          specified. When not specified, defaults to the workflow execution timeout.
+
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+      scheduleToStartTimeout:
+        type: string
+        description: |-
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+        title: |-
+          Limits the time an activity task can stay in a task queue before a worker picks it up. The
+          "schedule" time is when the most recent retry is scheduled. This timeout should usually not
+          be set: it's useful in specific scenarios like worker-specific task queues. This timeout is
+          always non retryable, as all a retry would achieve is to put it back into the same queue.
+          Defaults to `schedule_to_close_timeout` or workflow execution timeout if that is not
+          specified. More info:
+          https://docs.temporal.io/docs/content/what-is-a-schedule-to-start-timeout/
+      startToCloseTimeout:
+        type: string
+        description: |-
+          Maximum time an activity is allowed to execute after being picked up by a worker. This
+          timeout is always retryable. Either this or `schedule_to_close_timeout` must be specified.
+
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+      heartbeatTimeout:
+        type: string
+        description: Maximum permitted time between successful worker heartbeats.
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+        description: |-
+          Activities are provided by a default retry policy which is controlled through the service's
+          dynamic configuration. Retries will be attempted until `schedule_to_close_timeout` has
+          elapsed. To disable retries set retry_policy.maximum_attempts to 1.
+      requestEagerExecution:
+        type: boolean
+        description: |-
+          Request to start the activity directly bypassing matching service and worker polling
+          The slot for executing the activity should be reserved when setting this field to true.
+      useCompatibleVersion:
+        type: boolean
+        description: |-
+          If this is set, the workflow executing this command wishes to start the activity using
+          a version compatible with the version that this workflow most recently ran on, if such
+          behavior is possible.
+  commandSignalExternalWorkflowExecutionCommandAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+      execution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      signalName:
+        type: string
+        description: The workflow author-defined name of the signal to send to the workflow.
+      input:
+        $ref: '#/definitions/commonPayloads'
+        description: Serialized value(s) to provide with the signal.
+      control:
+        type: string
+        title: Deprecated
+      childWorkflowOnly:
+        type: boolean
+        description: |-
+          Set this to true if the workflow being cancelled is a child of the workflow originating this
+          command. The request will be rejected if it is set to true and the target workflow is *not*
+          a child of the requesting workflow.
+      header:
+        $ref: '#/definitions/commonHeader'
+        description: "Headers that are passed by the workflow that is sending a signal to the external \nworkflow that is receiving this signal."
+  commandStartChildWorkflowExecutionCommandAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+      workflowId:
+        type: string
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      input:
+        $ref: '#/definitions/commonPayloads'
+      workflowExecutionTimeout:
+        type: string
+        description: Total workflow execution timeout including retries and continue as new.
+      workflowRunTimeout:
+        type: string
+        description: Timeout of a single workflow run.
+      workflowTaskTimeout:
+        type: string
+        description: Timeout of a single workflow task.
+      parentClosePolicy:
+        $ref: '#/definitions/enumsParentClosePolicy'
+        description: 'Default: PARENT_CLOSE_POLICY_TERMINATE.'
+      control:
+        type: string
+      workflowIdReusePolicy:
+        $ref: '#/definitions/enumsWorkflowIdReusePolicy'
+        description: 'Default: WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE.'
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+      cronSchedule:
+        type: string
+        description: Establish a cron schedule for the child workflow.
+      header:
+        $ref: '#/definitions/commonHeader'
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      useCompatibleVersion:
+        type: boolean
+        description: |-
+          If this is set, the workflow executing this command wishes to start the child workflow using
+          a version compatible with the version that this workflow most recently ran on, if such
+          behavior is possible.
+  commandStartTimerCommandAttributes:
+    type: object
+    properties:
+      timerId:
+        type: string
+        description: |-
+          An id for the timer, currently live timers must have different ids. Typically autogenerated
+          by the SDK.
+      startToFireTimeout:
+        type: string
+        description: |-
+          How long until the timer fires, producing a `TIMER_FIRED` event.
+
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+  commandUpsertWorkflowSearchAttributesCommandAttributes:
+    type: object
+    properties:
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+  commonActivityType:
+    type: object
+    properties:
+      name:
+        type: string
+    title: |-
+      Represents the identifier used by a activity author to define the activity. Typically, the
+      name of a function. This is sometimes referred to as the activity's "name"
+  commonDataBlob:
+    type: object
+    properties:
+      encodingType:
+        $ref: '#/definitions/enumsEncodingType'
+      data:
+        type: string
+        format: byte
+  commonHeader:
+    type: object
+    properties:
+      fields:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/commonPayload'
+    description: |-
+      Contains metadata that can be attached to a variety of requests, like starting a workflow, and
+      can be propagated between, for example, workflows and activities.
+  commonMemo:
+    type: object
+    properties:
+      fields:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/commonPayload'
+    title: A user-defined set of *unindexed* fields that are exposed when listing/searching workflows
+  commonMeteringMetadata:
+    type: object
+    properties:
+      nonfirstLocalActivityExecutionAttempts:
+        type: integer
+        format: int64
+        description: |-
+          Count of local activities which have begun an execution attempt during this workflow task,
+          and whose first attempt occurred in some previous task. This is used for metering
+          purposes, and does not affect workflow state.
+
+          (-- api-linter: core::0141::forbidden-types=disabled
+              aip.dev/not-precedent: Negative values make no sense to represent. --)
+    title: Metadata relevant for metering purposes
+  commonPayload:
+    type: object
+    properties:
+      metadata:
+        type: object
+        additionalProperties:
+          type: string
+          format: byte
+      data:
+        type: string
+        format: byte
+    description: |-
+      Represents some binary (byte array) data (ex: activity input parameters or workflow result) with
+      metadata which describes this binary data (format, encoding, encryption, etc). Serialization
+      of the data may be user-defined.
+  commonPayloads:
+    type: object
+    properties:
+      payloads:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/commonPayload'
+    title: See `Payload`
+  commonRetryPolicy:
+    type: object
+    properties:
+      initialInterval:
+        type: string
+        description: Interval of the first retry. If retryBackoffCoefficient is 1.0 then it is used for all retries.
+      backoffCoefficient:
+        type: number
+        format: double
+        description: |-
+          Coefficient used to calculate the next retry interval.
+          The next retry interval is previous interval multiplied by the coefficient.
+          Must be 1 or larger.
+      maximumInterval:
+        type: string
+        description: |-
+          Maximum interval between retries. Exponential backoff leads to interval increase.
+          This value is the cap of the increase. Default is 100x of the initial interval.
+      maximumAttempts:
+        type: integer
+        format: int32
+        title: |-
+          Maximum number of attempts. When exceeded the retries stop even if not expired yet.
+          1 disables retries. 0 means unlimited (up to the timeouts)
+      nonRetryableErrorTypes:
+        type: array
+        items:
+          type: string
+        description: |-
+          Non-Retryable errors types. Will stop retrying if the error type matches this list. Note that
+          this is not a substring match, the error *type* (not message) must match exactly.
+    title: How retries ought to be handled, usable by both workflows and activities
+  commonSearchAttributes:
+    type: object
+    properties:
+      indexedFields:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/commonPayload'
+    description: |-
+      A user-defined set of *indexed* fields that are used/exposed when listing/searching workflows.
+      The payload is not serialized in a user-defined way.
+  commonWorkerVersionCapabilities:
+    type: object
+    properties:
+      buildId:
+        type: string
+        title: An opaque whole-worker identifier
+      useVersioning:
+        type: boolean
+        description: |-
+          If set, the worker is opting in to worker versioning, and wishes to only receive appropriate
+          tasks.
+    description: |-
+      Identifies the version(s) that a worker is compatible with when polling or identifying itself,
+      and whether or not this worker is opting into the build-id based versioning feature. This is
+      used by matching to determine which workers ought to receive what tasks.
+  commonWorkerVersionStamp:
+    type: object
+    properties:
+      buildId:
+        type: string
+        description: |-
+          An opaque whole-worker identifier. Replaces the deprecated `binary_checksum` field when this
+          message is included in requests which previously used that.
+      bundleId:
+        type: string
+        description: |-
+          Set if the worker used a dynamically loadable bundle to process
+          the task. The bundle could be a WASM blob, JS bundle, etc.
+      useVersioning:
+        type: boolean
+        description: |-
+          If set, the worker is opting in to worker versioning. Otherwise, this is used only as a
+          marker for workflow reset points and the BuildIDs search attribute.
+    title: Identifies the version(s) of a worker that processed a task
+  commonWorkflowExecution:
+    type: object
+    properties:
+      workflowId:
+        type: string
+      runId:
+        type: string
+    description: |-
+      Identifies a specific workflow within a namespace. Practically speaking, because run_id is a
+      uuid, a workflow execution is globally unique. Note that many commands allow specifying an empty
+      run id as a way of saying "target the latest run of the workflow".
+  commonWorkflowType:
+    type: object
+    properties:
+      name:
+        type: string
+    title: |-
+      Represents the identifier used by a workflow author to define the workflow. Typically, the
+      name of a function. This is sometimes referred to as the workflow's "name"
+  enumsArchivalState:
+    type: string
+    enum:
+      - ARCHIVAL_STATE_UNSPECIFIED
+      - ARCHIVAL_STATE_DISABLED
+      - ARCHIVAL_STATE_ENABLED
+    default: ARCHIVAL_STATE_UNSPECIFIED
+  enumsBatchOperationState:
+    type: string
+    enum:
+      - BATCH_OPERATION_STATE_UNSPECIFIED
+      - BATCH_OPERATION_STATE_RUNNING
+      - BATCH_OPERATION_STATE_COMPLETED
+      - BATCH_OPERATION_STATE_FAILED
+    default: BATCH_OPERATION_STATE_UNSPECIFIED
+  enumsBatchOperationType:
+    type: string
+    enum:
+      - BATCH_OPERATION_TYPE_UNSPECIFIED
+      - BATCH_OPERATION_TYPE_TERMINATE
+      - BATCH_OPERATION_TYPE_CANCEL
+      - BATCH_OPERATION_TYPE_SIGNAL
+      - BATCH_OPERATION_TYPE_DELETE
+      - BATCH_OPERATION_TYPE_RESET
+    default: BATCH_OPERATION_TYPE_UNSPECIFIED
+  enumsCancelExternalWorkflowExecutionFailedCause:
+    type: string
+    enum:
+      - CANCEL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_UNSPECIFIED
+      - CANCEL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_EXTERNAL_WORKFLOW_EXECUTION_NOT_FOUND
+      - CANCEL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_NAMESPACE_NOT_FOUND
+    default: CANCEL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_UNSPECIFIED
+  enumsCommandType:
+    type: string
+    enum:
+      - COMMAND_TYPE_UNSPECIFIED
+      - COMMAND_TYPE_SCHEDULE_ACTIVITY_TASK
+      - COMMAND_TYPE_REQUEST_CANCEL_ACTIVITY_TASK
+      - COMMAND_TYPE_START_TIMER
+      - COMMAND_TYPE_COMPLETE_WORKFLOW_EXECUTION
+      - COMMAND_TYPE_FAIL_WORKFLOW_EXECUTION
+      - COMMAND_TYPE_CANCEL_TIMER
+      - COMMAND_TYPE_CANCEL_WORKFLOW_EXECUTION
+      - COMMAND_TYPE_REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION
+      - COMMAND_TYPE_RECORD_MARKER
+      - COMMAND_TYPE_CONTINUE_AS_NEW_WORKFLOW_EXECUTION
+      - COMMAND_TYPE_START_CHILD_WORKFLOW_EXECUTION
+      - COMMAND_TYPE_SIGNAL_EXTERNAL_WORKFLOW_EXECUTION
+      - COMMAND_TYPE_UPSERT_WORKFLOW_SEARCH_ATTRIBUTES
+      - COMMAND_TYPE_PROTOCOL_MESSAGE
+      - COMMAND_TYPE_MODIFY_WORKFLOW_PROPERTIES
+    default: COMMAND_TYPE_UNSPECIFIED
+    description: Whenever this list of command types is changed do change the function shouldBufferEvent in mutableStateBuilder.go to make sure to do the correct event ordering.
+  enumsContinueAsNewInitiator:
+    type: string
+    enum:
+      - CONTINUE_AS_NEW_INITIATOR_UNSPECIFIED
+      - CONTINUE_AS_NEW_INITIATOR_WORKFLOW
+      - CONTINUE_AS_NEW_INITIATOR_RETRY
+      - CONTINUE_AS_NEW_INITIATOR_CRON_SCHEDULE
+    default: CONTINUE_AS_NEW_INITIATOR_UNSPECIFIED
+    title: |-
+      - CONTINUE_AS_NEW_INITIATOR_WORKFLOW: The workflow itself requested to continue as new
+       - CONTINUE_AS_NEW_INITIATOR_RETRY: The workflow continued as new because it is retrying
+       - CONTINUE_AS_NEW_INITIATOR_CRON_SCHEDULE: The workflow continued as new because cron has triggered a new execution
+  enumsEncodingType:
+    type: string
+    enum:
+      - ENCODING_TYPE_UNSPECIFIED
+      - ENCODING_TYPE_PROTO3
+      - ENCODING_TYPE_JSON
+    default: ENCODING_TYPE_UNSPECIFIED
+  enumsEventType:
+    type: string
+    enum:
+      - EVENT_TYPE_UNSPECIFIED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_STARTED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_FAILED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT
+      - EVENT_TYPE_WORKFLOW_TASK_SCHEDULED
+      - EVENT_TYPE_WORKFLOW_TASK_STARTED
+      - EVENT_TYPE_WORKFLOW_TASK_COMPLETED
+      - EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT
+      - EVENT_TYPE_WORKFLOW_TASK_FAILED
+      - EVENT_TYPE_ACTIVITY_TASK_SCHEDULED
+      - EVENT_TYPE_ACTIVITY_TASK_STARTED
+      - EVENT_TYPE_ACTIVITY_TASK_COMPLETED
+      - EVENT_TYPE_ACTIVITY_TASK_FAILED
+      - EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT
+      - EVENT_TYPE_ACTIVITY_TASK_CANCEL_REQUESTED
+      - EVENT_TYPE_ACTIVITY_TASK_CANCELED
+      - EVENT_TYPE_TIMER_STARTED
+      - EVENT_TYPE_TIMER_FIRED
+      - EVENT_TYPE_TIMER_CANCELED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_CANCEL_REQUESTED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED
+      - EVENT_TYPE_REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_INITIATED
+      - EVENT_TYPE_REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_FAILED
+      - EVENT_TYPE_EXTERNAL_WORKFLOW_EXECUTION_CANCEL_REQUESTED
+      - EVENT_TYPE_MARKER_RECORDED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_SIGNALED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_CONTINUED_AS_NEW
+      - EVENT_TYPE_START_CHILD_WORKFLOW_EXECUTION_INITIATED
+      - EVENT_TYPE_START_CHILD_WORKFLOW_EXECUTION_FAILED
+      - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_STARTED
+      - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_COMPLETED
+      - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_FAILED
+      - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_CANCELED
+      - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_TIMED_OUT
+      - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_TERMINATED
+      - EVENT_TYPE_SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_INITIATED
+      - EVENT_TYPE_SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED
+      - EVENT_TYPE_EXTERNAL_WORKFLOW_EXECUTION_SIGNALED
+      - EVENT_TYPE_UPSERT_WORKFLOW_SEARCH_ATTRIBUTES
+      - EVENT_TYPE_WORKFLOW_EXECUTION_UPDATE_ACCEPTED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_UPDATE_REJECTED
+      - EVENT_TYPE_WORKFLOW_EXECUTION_UPDATE_COMPLETED
+      - EVENT_TYPE_WORKFLOW_PROPERTIES_MODIFIED_EXTERNALLY
+      - EVENT_TYPE_ACTIVITY_PROPERTIES_MODIFIED_EXTERNALLY
+      - EVENT_TYPE_WORKFLOW_PROPERTIES_MODIFIED
+    default: EVENT_TYPE_UNSPECIFIED
+    description: |-
+      - EVENT_TYPE_UNSPECIFIED: Place holder and should never appear in a Workflow execution history
+       - EVENT_TYPE_WORKFLOW_EXECUTION_STARTED: Workflow execution has been triggered/started
+      It contains Workflow execution inputs, as well as Workflow timeout configurations
+       - EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED: Workflow execution has successfully completed and contains Workflow execution results
+       - EVENT_TYPE_WORKFLOW_EXECUTION_FAILED: Workflow execution has unsuccessfully completed and contains the Workflow execution error
+       - EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT: Workflow execution has timed out by the Temporal Server
+      Usually due to the Workflow having not been completed within timeout settings
+       - EVENT_TYPE_WORKFLOW_TASK_SCHEDULED: Workflow Task has been scheduled and the SDK client should now be able to process any new history events
+       - EVENT_TYPE_WORKFLOW_TASK_STARTED: Workflow Task has started and the SDK client has picked up the Workflow Task and is processing new history events
+       - EVENT_TYPE_WORKFLOW_TASK_COMPLETED: Workflow Task has completed
+      The SDK client picked up the Workflow Task and processed new history events
+       - EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT: Workflow Task encountered a timeout
+      Either an SDK client with a local cache was not available at the time, or it took too long for the SDK client to process the task
+       - EVENT_TYPE_WORKFLOW_TASK_FAILED: Workflow Task encountered a failure
+      Usually this means that the Workflow was non-deterministic
+      However, the Workflow reset functionality also uses this event
+       - EVENT_TYPE_ACTIVITY_TASK_SCHEDULED: Activity Task was scheduled
+      The SDK client should pick up this activity task and execute
+      This event type contains activity inputs, as well as activity timeout configurations
+       - EVENT_TYPE_ACTIVITY_TASK_STARTED: Activity Task has started executing
+      The SDK client has picked up the Activity Task and is processing the Activity invocation
+       - EVENT_TYPE_ACTIVITY_TASK_COMPLETED: Activity Task has finished successfully
+      The SDK client has picked up and successfully completed the Activity Task
+      This event type contains Activity execution results
+       - EVENT_TYPE_ACTIVITY_TASK_FAILED: Activity Task has finished unsuccessfully
+      The SDK picked up the Activity Task but unsuccessfully completed it
+      This event type contains Activity execution errors
+       - EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT: Activity has timed out according to the Temporal Server
+      Activity did not complete within the timeout settings
+       - EVENT_TYPE_ACTIVITY_TASK_CANCEL_REQUESTED: A request to cancel the Activity has occurred
+      The SDK client will be able to confirm cancellation of an Activity during an Activity heartbeat
+       - EVENT_TYPE_ACTIVITY_TASK_CANCELED: Activity has been cancelled
+       - EVENT_TYPE_TIMER_STARTED: A timer has started
+       - EVENT_TYPE_TIMER_FIRED: A timer has fired
+       - EVENT_TYPE_TIMER_CANCELED: A time has been cancelled
+       - EVENT_TYPE_WORKFLOW_EXECUTION_CANCEL_REQUESTED: A request has been made to cancel the Workflow execution
+       - EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED: SDK client has confirmed the cancellation request and the Workflow execution has been cancelled
+       - EVENT_TYPE_REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_INITIATED: Workflow has requested that the Temporal Server try to cancel another Workflow
+       - EVENT_TYPE_REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_FAILED: Temporal Server could not cancel the targeted Workflow
+      This is usually because the target Workflow could not be found
+       - EVENT_TYPE_EXTERNAL_WORKFLOW_EXECUTION_CANCEL_REQUESTED: Temporal Server has successfully requested the cancellation of the target Workflow
+       - EVENT_TYPE_MARKER_RECORDED: A marker has been recorded.
+      This event type is transparent to the Temporal Server
+      The Server will only store it and will not try to understand it.
+       - EVENT_TYPE_WORKFLOW_EXECUTION_SIGNALED: Workflow has received a Signal event
+      The event type contains the Signal name, as well as a Signal payload
+       - EVENT_TYPE_WORKFLOW_EXECUTION_TERMINATED: Workflow execution has been forcefully terminated
+      This is usually because the terminate Workflow API was called
+       - EVENT_TYPE_WORKFLOW_EXECUTION_CONTINUED_AS_NEW: Workflow has successfully completed and a new Workflow has been started within the same transaction
+      Contains last Workflow execution results as well as new Workflow execution inputs
+       - EVENT_TYPE_START_CHILD_WORKFLOW_EXECUTION_INITIATED: Temporal Server will try to start a child Workflow
+       - EVENT_TYPE_START_CHILD_WORKFLOW_EXECUTION_FAILED: Child Workflow execution cannot be started/triggered
+      Usually due to a child Workflow ID collision
+       - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_STARTED: Child Workflow execution has successfully started/triggered
+       - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_COMPLETED: Child Workflow execution has successfully completed
+       - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_FAILED: Child Workflow execution has unsuccessfully completed
+       - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_CANCELED: Child Workflow execution has been cancelled
+       - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_TIMED_OUT: Child Workflow execution has timed out by the Temporal Server
+       - EVENT_TYPE_CHILD_WORKFLOW_EXECUTION_TERMINATED: Child Workflow execution has been terminated
+       - EVENT_TYPE_SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_INITIATED: Temporal Server will try to Signal the targeted Workflow
+      Contains the Signal name, as well as a Signal payload
+       - EVENT_TYPE_SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED: Temporal Server cannot Signal the targeted Workflow
+      Usually because the Workflow could not be found
+       - EVENT_TYPE_EXTERNAL_WORKFLOW_EXECUTION_SIGNALED: Temporal Server has successfully Signaled the targeted Workflow
+       - EVENT_TYPE_UPSERT_WORKFLOW_SEARCH_ATTRIBUTES: Workflow search attributes should be updated and synchronized with the visibility store
+       - EVENT_TYPE_WORKFLOW_EXECUTION_UPDATE_ACCEPTED: An update was accepted (i.e. validated)
+       - EVENT_TYPE_WORKFLOW_EXECUTION_UPDATE_REJECTED: An update was rejected (i.e. failed validation)
+       - EVENT_TYPE_WORKFLOW_EXECUTION_UPDATE_COMPLETED: An update completed
+       - EVENT_TYPE_WORKFLOW_PROPERTIES_MODIFIED_EXTERNALLY: Some property or properties of the workflow as a whole have changed by non-workflow code.
+      The distinction of external vs. command-based modification is important so the SDK can
+      maintain determinism when using the command-based approach.
+       - EVENT_TYPE_ACTIVITY_PROPERTIES_MODIFIED_EXTERNALLY: Some property or properties of an already-scheduled activity have changed by non-workflow code.
+      The distinction of external vs. command-based modification is important so the SDK can
+      maintain determinism when using the command-based approach.
+       - EVENT_TYPE_WORKFLOW_PROPERTIES_MODIFIED: Workflow properties modified by user workflow code
+    title: Whenever this list of events is changed do change the function shouldBufferEvent in mutableStateBuilder.go to make sure to do the correct event ordering
+  enumsHistoryEventFilterType:
+    type: string
+    enum:
+      - HISTORY_EVENT_FILTER_TYPE_UNSPECIFIED
+      - HISTORY_EVENT_FILTER_TYPE_ALL_EVENT
+      - HISTORY_EVENT_FILTER_TYPE_CLOSE_EVENT
+    default: HISTORY_EVENT_FILTER_TYPE_UNSPECIFIED
+  enumsIndexedValueType:
+    type: string
+    enum:
+      - INDEXED_VALUE_TYPE_UNSPECIFIED
+      - INDEXED_VALUE_TYPE_TEXT
+      - INDEXED_VALUE_TYPE_KEYWORD
+      - INDEXED_VALUE_TYPE_INT
+      - INDEXED_VALUE_TYPE_DOUBLE
+      - INDEXED_VALUE_TYPE_BOOL
+      - INDEXED_VALUE_TYPE_DATETIME
+      - INDEXED_VALUE_TYPE_KEYWORD_LIST
+    default: INDEXED_VALUE_TYPE_UNSPECIFIED
+  enumsNamespaceState:
+    type: string
+    enum:
+      - NAMESPACE_STATE_UNSPECIFIED
+      - NAMESPACE_STATE_REGISTERED
+      - NAMESPACE_STATE_DEPRECATED
+      - NAMESPACE_STATE_DELETED
+    default: NAMESPACE_STATE_UNSPECIFIED
+  enumsParentClosePolicy:
+    type: string
+    enum:
+      - PARENT_CLOSE_POLICY_UNSPECIFIED
+      - PARENT_CLOSE_POLICY_TERMINATE
+      - PARENT_CLOSE_POLICY_ABANDON
+      - PARENT_CLOSE_POLICY_REQUEST_CANCEL
+    default: PARENT_CLOSE_POLICY_UNSPECIFIED
+    description: |-
+      - PARENT_CLOSE_POLICY_TERMINATE: The child workflow will also terminate
+       - PARENT_CLOSE_POLICY_ABANDON: The child workflow will do nothing
+       - PARENT_CLOSE_POLICY_REQUEST_CANCEL: Cancellation will be requested of the child workflow
+    title: Defines how child workflows will react to their parent completing
+  enumsPendingActivityState:
+    type: string
+    enum:
+      - PENDING_ACTIVITY_STATE_UNSPECIFIED
+      - PENDING_ACTIVITY_STATE_SCHEDULED
+      - PENDING_ACTIVITY_STATE_STARTED
+      - PENDING_ACTIVITY_STATE_CANCEL_REQUESTED
+    default: PENDING_ACTIVITY_STATE_UNSPECIFIED
+  enumsPendingWorkflowTaskState:
+    type: string
+    enum:
+      - PENDING_WORKFLOW_TASK_STATE_UNSPECIFIED
+      - PENDING_WORKFLOW_TASK_STATE_SCHEDULED
+      - PENDING_WORKFLOW_TASK_STATE_STARTED
+    default: PENDING_WORKFLOW_TASK_STATE_UNSPECIFIED
+  enumsQueryRejectCondition:
+    type: string
+    enum:
+      - QUERY_REJECT_CONDITION_UNSPECIFIED
+      - QUERY_REJECT_CONDITION_NONE
+      - QUERY_REJECT_CONDITION_NOT_OPEN
+      - QUERY_REJECT_CONDITION_NOT_COMPLETED_CLEANLY
+    default: QUERY_REJECT_CONDITION_UNSPECIFIED
+    description: |2-
+       - QUERY_REJECT_CONDITION_NONE: None indicates that query should not be rejected.
+       - QUERY_REJECT_CONDITION_NOT_OPEN: NotOpen indicates that query should be rejected if workflow is not open.
+       - QUERY_REJECT_CONDITION_NOT_COMPLETED_CLEANLY: NotCompletedCleanly indicates that query should be rejected if workflow did not complete cleanly.
+  enumsQueryResultType:
+    type: string
+    enum:
+      - QUERY_RESULT_TYPE_UNSPECIFIED
+      - QUERY_RESULT_TYPE_ANSWERED
+      - QUERY_RESULT_TYPE_FAILED
+    default: QUERY_RESULT_TYPE_UNSPECIFIED
+  enumsReplicationState:
+    type: string
+    enum:
+      - REPLICATION_STATE_UNSPECIFIED
+      - REPLICATION_STATE_NORMAL
+      - REPLICATION_STATE_HANDOVER
+    default: REPLICATION_STATE_UNSPECIFIED
+  enumsResetReapplyType:
+    type: string
+    enum:
+      - RESET_REAPPLY_TYPE_UNSPECIFIED
+      - RESET_REAPPLY_TYPE_SIGNAL
+      - RESET_REAPPLY_TYPE_NONE
+    default: RESET_REAPPLY_TYPE_UNSPECIFIED
+    title: |-
+      Reset reapplay(replay) options
+      * RESET_REAPPLY_TYPE_SIGNAL (default) - Signals are reapplied when workflow is reset
+      * RESET_REAPPLY_TYPE_NONE - nothing is reapplied
+  enumsResetType:
+    type: string
+    enum:
+      - RESET_TYPE_UNSPECIFIED
+      - RESET_TYPE_FIRST_WORKFLOW_TASK
+      - RESET_TYPE_LAST_WORKFLOW_TASK
+    default: RESET_TYPE_UNSPECIFIED
+    description: |-
+      - RESET_TYPE_FIRST_WORKFLOW_TASK: Resets to event of the first workflow task completed, or if it does not exist, the event after task scheduled.
+       - RESET_TYPE_LAST_WORKFLOW_TASK: Resets to event of the last workflow task completed, or if it does not exist, the event after task scheduled.
+    title: Reset type options
+  enumsRetryState:
+    type: string
+    enum:
+      - RETRY_STATE_UNSPECIFIED
+      - RETRY_STATE_IN_PROGRESS
+      - RETRY_STATE_NON_RETRYABLE_FAILURE
+      - RETRY_STATE_TIMEOUT
+      - RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED
+      - RETRY_STATE_RETRY_POLICY_NOT_SET
+      - RETRY_STATE_INTERNAL_SERVER_ERROR
+      - RETRY_STATE_CANCEL_REQUESTED
+    default: RETRY_STATE_UNSPECIFIED
+  enumsScheduleOverlapPolicy:
+    type: string
+    enum:
+      - SCHEDULE_OVERLAP_POLICY_UNSPECIFIED
+      - SCHEDULE_OVERLAP_POLICY_SKIP
+      - SCHEDULE_OVERLAP_POLICY_BUFFER_ONE
+      - SCHEDULE_OVERLAP_POLICY_BUFFER_ALL
+      - SCHEDULE_OVERLAP_POLICY_CANCEL_OTHER
+      - SCHEDULE_OVERLAP_POLICY_TERMINATE_OTHER
+      - SCHEDULE_OVERLAP_POLICY_ALLOW_ALL
+    default: SCHEDULE_OVERLAP_POLICY_UNSPECIFIED
+    description: |-
+      ScheduleOverlapPolicy controls what happens when a workflow would be started
+      by a schedule, and is already running.
+
+       - SCHEDULE_OVERLAP_POLICY_SKIP: SCHEDULE_OVERLAP_POLICY_SKIP (default) means don't start anything. When the
+      workflow completes, the next scheduled event after that time will be considered.
+       - SCHEDULE_OVERLAP_POLICY_BUFFER_ONE: SCHEDULE_OVERLAP_POLICY_BUFFER_ONE means start the workflow again soon as the
+      current one completes, but only buffer one start in this way. If another start is
+      supposed to happen when the workflow is running, and one is already buffered, then
+      only the first one will be started after the running workflow finishes.
+       - SCHEDULE_OVERLAP_POLICY_BUFFER_ALL: SCHEDULE_OVERLAP_POLICY_BUFFER_ALL means buffer up any number of starts to all
+      happen sequentially, immediately after the running workflow completes.
+       - SCHEDULE_OVERLAP_POLICY_CANCEL_OTHER: SCHEDULE_OVERLAP_POLICY_CANCEL_OTHER means that if there is another workflow
+      running, cancel it, and start the new one after the old one completes cancellation.
+       - SCHEDULE_OVERLAP_POLICY_TERMINATE_OTHER: SCHEDULE_OVERLAP_POLICY_TERMINATE_OTHER means that if there is another workflow
+      running, terminate it and start the new one immediately.
+       - SCHEDULE_OVERLAP_POLICY_ALLOW_ALL: SCHEDULE_OVERLAP_POLICY_ALLOW_ALL means start any number of concurrent workflows.
+      Note that with this policy, last completion result and last failure will not be
+      available since workflows are not sequential.
+  enumsSeverity:
+    type: string
+    enum:
+      - SEVERITY_UNSPECIFIED
+      - SEVERITY_HIGH
+      - SEVERITY_MEDIUM
+      - SEVERITY_LOW
+    default: SEVERITY_UNSPECIFIED
+  enumsSignalExternalWorkflowExecutionFailedCause:
+    type: string
+    enum:
+      - SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_UNSPECIFIED
+      - SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_EXTERNAL_WORKFLOW_EXECUTION_NOT_FOUND
+      - SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_NAMESPACE_NOT_FOUND
+      - SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_SIGNAL_COUNT_LIMIT_EXCEEDED
+    default: SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_UNSPECIFIED
+    title: '- SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_FAILED_CAUSE_SIGNAL_COUNT_LIMIT_EXCEEDED: Signal count limit is per workflow and controlled by server dynamic config "history.maximumSignalsPerExecution"'
+  enumsStartChildWorkflowExecutionFailedCause:
+    type: string
+    enum:
+      - START_CHILD_WORKFLOW_EXECUTION_FAILED_CAUSE_UNSPECIFIED
+      - START_CHILD_WORKFLOW_EXECUTION_FAILED_CAUSE_WORKFLOW_ALREADY_EXISTS
+      - START_CHILD_WORKFLOW_EXECUTION_FAILED_CAUSE_NAMESPACE_NOT_FOUND
+    default: START_CHILD_WORKFLOW_EXECUTION_FAILED_CAUSE_UNSPECIFIED
+  enumsTaskQueueKind:
+    type: string
+    enum:
+      - TASK_QUEUE_KIND_UNSPECIFIED
+      - TASK_QUEUE_KIND_NORMAL
+      - TASK_QUEUE_KIND_STICKY
+    default: TASK_QUEUE_KIND_UNSPECIFIED
+    description: |-
+      The task queue specified by the user is always a normal task queue. There can be as many
+      workers as desired for a single normal task queue. All those workers may pick up tasks from
+      that queue.
+       - TASK_QUEUE_KIND_STICKY: A sticky queue only includes new history since the last workflow task, and they are
+      per-worker.
+
+      Sticky queues are created dynamically by each worker during their start up. They only exist
+      for the lifetime of the worker process. Tasks in a sticky task queue are only available to
+      the worker that created the sticky queue.
+
+      Sticky queues are only for workflow tasks. There are no sticky task queues for activities.
+    title: '- TASK_QUEUE_KIND_NORMAL: Tasks from a normal workflow task queue always include complete workflow history'
+  enumsTaskQueueType:
+    type: string
+    enum:
+      - TASK_QUEUE_TYPE_UNSPECIFIED
+      - TASK_QUEUE_TYPE_WORKFLOW
+      - TASK_QUEUE_TYPE_ACTIVITY
+    default: TASK_QUEUE_TYPE_UNSPECIFIED
+    description: |2-
+       - TASK_QUEUE_TYPE_WORKFLOW: Workflow type of task queue.
+       - TASK_QUEUE_TYPE_ACTIVITY: Activity type of task queue.
+  enumsTaskReachability:
+    type: string
+    enum:
+      - TASK_REACHABILITY_UNSPECIFIED
+      - TASK_REACHABILITY_NEW_WORKFLOWS
+      - TASK_REACHABILITY_EXISTING_WORKFLOWS
+      - TASK_REACHABILITY_OPEN_WORKFLOWS
+      - TASK_REACHABILITY_CLOSED_WORKFLOWS
+    default: TASK_REACHABILITY_UNSPECIFIED
+    description: |-
+      Specifies which category of tasks may reach a worker on a versioned task queue.
+      Used both in a reachability query and its response.
+
+       - TASK_REACHABILITY_NEW_WORKFLOWS: There's a possiblity for a worker to receive new workflow tasks. Workers should *not* be retired.
+       - TASK_REACHABILITY_EXISTING_WORKFLOWS: There's a possiblity for a worker to receive existing workflow and activity tasks from existing workflows. Workers
+      should *not* be retired.
+      This enum value does not distinguish between open and closed workflows.
+       - TASK_REACHABILITY_OPEN_WORKFLOWS: There's a possiblity for a worker to receive existing workflow and activity tasks from open workflows. Workers
+      should *not* be retired.
+       - TASK_REACHABILITY_CLOSED_WORKFLOWS: There's a possiblity for a worker to receive existing workflow tasks from closed workflows. Workers may be
+      retired dependending on application requirements. For example, if there's no need to query closed workflows.
+  enumsTimeoutType:
+    type: string
+    enum:
+      - TIMEOUT_TYPE_UNSPECIFIED
+      - TIMEOUT_TYPE_START_TO_CLOSE
+      - TIMEOUT_TYPE_SCHEDULE_TO_START
+      - TIMEOUT_TYPE_SCHEDULE_TO_CLOSE
+      - TIMEOUT_TYPE_HEARTBEAT
+    default: TIMEOUT_TYPE_UNSPECIFIED
+  enumsUpdateWorkflowExecutionLifecycleStage:
+    type: string
+    enum:
+      - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_UNSPECIFIED
+      - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_ADMITTED
+      - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_ACCEPTED
+      - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_COMPLETED
+    default: UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_UNSPECIFIED
+    description: |-
+      UpdateWorkflowExecutionLifecycleStage is specified by clients invoking
+      workflow execution updates and used to indicate to the server how long the
+      client wishes to wait for a return value from the RPC. If any value other
+      than UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_COMPLETED is sent by the
+      client then the RPC will complete before the update is finished and will
+      return a handle to the running update so that it can later be polled for
+      completion.
+
+       - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_UNSPECIFIED: An unspecified vale for this enum.
+       - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_ADMITTED: The gRPC call will not return until the update request has been admitted
+      by the server - it may be the case that due to a considerations like load
+      or resource limits that an update is made to wait before the server will
+      indicate that it has been received and will be processed. This value
+      does not wait for any sort of acknowledgement from a worker.
+       - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_ACCEPTED: The gRPC call will not return until the update has passed validation on
+      a worker.
+       - UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_COMPLETED: The gRPC call will not return until the update has executed to completion
+      on a worker and has either been rejected or returned a value or an error.
+  enumsWorkflowExecutionStatus:
+    type: string
+    enum:
+      - WORKFLOW_EXECUTION_STATUS_UNSPECIFIED
+      - WORKFLOW_EXECUTION_STATUS_RUNNING
+      - WORKFLOW_EXECUTION_STATUS_COMPLETED
+      - WORKFLOW_EXECUTION_STATUS_FAILED
+      - WORKFLOW_EXECUTION_STATUS_CANCELED
+      - WORKFLOW_EXECUTION_STATUS_TERMINATED
+      - WORKFLOW_EXECUTION_STATUS_CONTINUED_AS_NEW
+      - WORKFLOW_EXECUTION_STATUS_TIMED_OUT
+    default: WORKFLOW_EXECUTION_STATUS_UNSPECIFIED
+    description: '- WORKFLOW_EXECUTION_STATUS_RUNNING: Value 1 is hardcoded in SQL persistence.'
+    title: |-
+      (-- api-linter: core::0216::synonyms=disabled
+          aip.dev/not-precedent: There is WorkflowExecutionState already in another package. --)
+  enumsWorkflowIdReusePolicy:
+    type: string
+    enum:
+      - WORKFLOW_ID_REUSE_POLICY_UNSPECIFIED
+      - WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE
+      - WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE_FAILED_ONLY
+      - WORKFLOW_ID_REUSE_POLICY_REJECT_DUPLICATE
+      - WORKFLOW_ID_REUSE_POLICY_TERMINATE_IF_RUNNING
+    default: WORKFLOW_ID_REUSE_POLICY_UNSPECIFIED
+    description: |-
+      Defines how new runs of a workflow with a particular ID may or may not be allowed. Note that
+      it is *never* valid to have two actively running instances of the same workflow id.
+
+       - WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE: Allow starting a workflow execution using the same workflow id.
+       - WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE_FAILED_ONLY: Allow starting a workflow execution using the same workflow id, only when the last
+      execution's final state is one of [terminated, cancelled, timed out, failed].
+       - WORKFLOW_ID_REUSE_POLICY_REJECT_DUPLICATE: Do not permit re-use of the workflow id for this workflow. Future start workflow requests
+      could potentially change the policy, allowing re-use of the workflow id.
+       - WORKFLOW_ID_REUSE_POLICY_TERMINATE_IF_RUNNING: If a workflow is running using the same workflow ID, terminate it and start a new one.
+      If no running workflow, then the behavior is the same as ALLOW_DUPLICATE
+  enumsWorkflowTaskFailedCause:
+    type: string
+    enum:
+      - WORKFLOW_TASK_FAILED_CAUSE_UNSPECIFIED
+      - WORKFLOW_TASK_FAILED_CAUSE_UNHANDLED_COMMAND
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_SCHEDULE_ACTIVITY_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_REQUEST_CANCEL_ACTIVITY_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_START_TIMER_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_CANCEL_TIMER_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_RECORD_MARKER_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_COMPLETE_WORKFLOW_EXECUTION_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_FAIL_WORKFLOW_EXECUTION_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_CANCEL_WORKFLOW_EXECUTION_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_CONTINUE_AS_NEW_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_START_TIMER_DUPLICATE_ID
+      - WORKFLOW_TASK_FAILED_CAUSE_RESET_STICKY_TASK_QUEUE
+      - WORKFLOW_TASK_FAILED_CAUSE_WORKFLOW_WORKER_UNHANDLED_FAILURE
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_SIGNAL_WORKFLOW_EXECUTION_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_START_CHILD_EXECUTION_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_FORCE_CLOSE_COMMAND
+      - WORKFLOW_TASK_FAILED_CAUSE_FAILOVER_CLOSE_COMMAND
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_SIGNAL_INPUT_SIZE
+      - WORKFLOW_TASK_FAILED_CAUSE_RESET_WORKFLOW
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_BINARY
+      - WORKFLOW_TASK_FAILED_CAUSE_SCHEDULE_ACTIVITY_DUPLICATE_ID
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_SEARCH_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_NON_DETERMINISTIC_ERROR
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_MODIFY_WORKFLOW_PROPERTIES_ATTRIBUTES
+      - WORKFLOW_TASK_FAILED_CAUSE_PENDING_CHILD_WORKFLOWS_LIMIT_EXCEEDED
+      - WORKFLOW_TASK_FAILED_CAUSE_PENDING_ACTIVITIES_LIMIT_EXCEEDED
+      - WORKFLOW_TASK_FAILED_CAUSE_PENDING_SIGNALS_LIMIT_EXCEEDED
+      - WORKFLOW_TASK_FAILED_CAUSE_PENDING_REQUEST_CANCEL_LIMIT_EXCEEDED
+      - WORKFLOW_TASK_FAILED_CAUSE_BAD_UPDATE_WORKFLOW_EXECUTION_MESSAGE
+      - WORKFLOW_TASK_FAILED_CAUSE_UNHANDLED_UPDATE
+    default: WORKFLOW_TASK_FAILED_CAUSE_UNSPECIFIED
+    description: |-
+      Workflow tasks can fail for various reasons. Note that some of these reasons can only originate
+      from the server, and some of them can only originate from the SDK/worker.
+
+       - WORKFLOW_TASK_FAILED_CAUSE_UNHANDLED_COMMAND: Between starting and completing the workflow task (with a workflow completion command), some
+      new command (like a signal) was processed into workflow history. The outstanding task will be
+      failed with this reason, and a worker must pick up a new task.
+       - WORKFLOW_TASK_FAILED_CAUSE_RESET_STICKY_TASK_QUEUE: The worker wishes to fail the task and have the next one be generated on a normal, not sticky
+      queue. Generally workers should prefer to use the explicit `ResetStickyTaskQueue` RPC call.
+       - WORKFLOW_TASK_FAILED_CAUSE_NON_DETERMINISTIC_ERROR: The worker encountered a mismatch while replaying history between what was expected, and
+      what the workflow code actually did.
+       - WORKFLOW_TASK_FAILED_CAUSE_PENDING_CHILD_WORKFLOWS_LIMIT_EXCEEDED: We send the below error codes to users when their requests would violate a size constraint
+      of their workflow. We do this to ensure that the state of their workflow does not become too
+      large because that can cause severe performance degradation. You can modify the thresholds for
+      each of these errors within your dynamic config.
+
+      Spawning a new child workflow would cause this workflow to exceed its limit of pending child
+      workflows.
+       - WORKFLOW_TASK_FAILED_CAUSE_PENDING_ACTIVITIES_LIMIT_EXCEEDED: Starting a new activity would cause this workflow to exceed its limit of pending activities
+      that we track.
+       - WORKFLOW_TASK_FAILED_CAUSE_PENDING_SIGNALS_LIMIT_EXCEEDED: A workflow has a buffer of signals that have not yet reached their destination. We return this
+      error when sending a new signal would exceed the capacity of this buffer.
+       - WORKFLOW_TASK_FAILED_CAUSE_PENDING_REQUEST_CANCEL_LIMIT_EXCEEDED: Similarly, we have a buffer of pending requests to cancel other workflows. We return this error
+      when our capacity for pending cancel requests is already reached.
+       - WORKFLOW_TASK_FAILED_CAUSE_BAD_UPDATE_WORKFLOW_EXECUTION_MESSAGE: Workflow execution update message (update.Acceptance, update.Rejection, or update.Response)
+      has wrong format, or missing required fields.
+       - WORKFLOW_TASK_FAILED_CAUSE_UNHANDLED_UPDATE: Similar to WORKFLOW_TASK_FAILED_CAUSE_UNHANDLED_COMMAND, but for updates.
+  failureActivityFailureInfo:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+      startedEventId:
+        type: string
+        format: int64
+      identity:
+        type: string
+      activityType:
+        $ref: '#/definitions/commonActivityType'
+      activityId:
+        type: string
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+  failureApplicationFailureInfo:
+    type: object
+    properties:
+      type:
+        type: string
+      nonRetryable:
+        type: boolean
+      details:
+        $ref: '#/definitions/commonPayloads'
+  failureCanceledFailureInfo:
+    type: object
+    properties:
+      details:
+        $ref: '#/definitions/commonPayloads'
+  failureChildWorkflowExecutionFailureInfo:
+    type: object
+    properties:
+      namespace:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      initiatedEventId:
+        type: string
+        format: int64
+      startedEventId:
+        type: string
+        format: int64
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+  failureFailure:
+    type: object
+    properties:
+      message:
+        type: string
+      source:
+        type: string
+        description: |-
+          The source this Failure originated in, e.g. TypeScriptSDK / JavaSDK
+          In some SDKs this is used to rehydrate the stack trace into an exception object.
+      stackTrace:
+        type: string
+      encodedAttributes:
+        $ref: '#/definitions/commonPayload'
+        description: "Alternative way to supply `message` and `stack_trace` and possibly other attributes, used for encryption of\nerrors originating in user code which might contain sensitive information.\nThe `encoded_attributes` Payload could represent any serializable object, e.g. JSON object or a `Failure` proto\nmessage.\n\nSDK authors: \n- The SDK should provide a default `encodeFailureAttributes` and `decodeFailureAttributes` implementation that:\n  - Uses a JSON object to represent `{ message, stack_trace }`.\n  - Overwrites the original message with \"Encoded failure\" to indicate that more information could be extracted.\n  - Overwrites the original stack_trace with an empty string.\n  - The resulting JSON object is converted to Payload using the default PayloadConverter and should be processed\n    by the user-provided PayloadCodec\n\n- If there's demand, we could allow overriding the default SDK implementation to encode other opaque Failure attributes.\n(-- api-linter: core::0203::optional=disabled --)"
+      cause:
+        $ref: '#/definitions/failureFailure'
+      applicationFailureInfo:
+        $ref: '#/definitions/failureApplicationFailureInfo'
+      timeoutFailureInfo:
+        $ref: '#/definitions/failureTimeoutFailureInfo'
+      canceledFailureInfo:
+        $ref: '#/definitions/failureCanceledFailureInfo'
+      terminatedFailureInfo:
+        $ref: '#/definitions/failureTerminatedFailureInfo'
+      serverFailureInfo:
+        $ref: '#/definitions/failureServerFailureInfo'
+      resetWorkflowFailureInfo:
+        $ref: '#/definitions/failureResetWorkflowFailureInfo'
+      activityFailureInfo:
+        $ref: '#/definitions/failureActivityFailureInfo'
+      childWorkflowExecutionFailureInfo:
+        $ref: '#/definitions/failureChildWorkflowExecutionFailureInfo'
+  failureResetWorkflowFailureInfo:
+    type: object
+    properties:
+      lastHeartbeatDetails:
+        $ref: '#/definitions/commonPayloads'
+  failureServerFailureInfo:
+    type: object
+    properties:
+      nonRetryable:
+        type: boolean
+  failureTerminatedFailureInfo:
+    type: object
+  failureTimeoutFailureInfo:
+    type: object
+    properties:
+      timeoutType:
+        $ref: '#/definitions/enumsTimeoutType'
+      lastHeartbeatDetails:
+        $ref: '#/definitions/commonPayloads'
+  filterStartTimeFilter:
+    type: object
+    properties:
+      earliestTime:
+        type: string
+        format: date-time
+      latestTime:
+        type: string
+        format: date-time
+  filterStatusFilter:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/enumsWorkflowExecutionStatus'
+  filterWorkflowExecutionFilter:
+    type: object
+    properties:
+      workflowId:
+        type: string
+      runId:
+        type: string
+  filterWorkflowTypeFilter:
+    type: object
+    properties:
+      name:
+        type: string
+  historyActivityPropertiesModifiedExternallyEventAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        description: The id of the `ACTIVITY_TASK_SCHEDULED` event this modification corresponds to.
+      newRetryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+        description: |-
+          If set, update the retry policy of the activity, replacing it with the specified one.
+          The number of attempts at the activity is preserved.
+  historyActivityTaskCancelRequestedEventAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_SCHEDULED` event this cancel request corresponds to
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+  historyActivityTaskCanceledEventAttributes:
+    type: object
+    properties:
+      details:
+        $ref: '#/definitions/commonPayloads'
+        title: Additional information that the activity reported upon confirming cancellation
+      latestCancelRequestedEventId:
+        type: string
+        format: int64
+        title: |-
+          id of the most recent `ACTIVITY_TASK_CANCEL_REQUESTED` event which refers to the same
+          activity
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_SCHEDULED` event this cancel confirmation corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_STARTED` event this cancel confirmation corresponds to
+      identity:
+        type: string
+        title: id of the worker who canceled this activity
+      workerVersion:
+        $ref: '#/definitions/commonWorkerVersionStamp'
+        description: Version info of the worker who processed this workflow task.
+  historyActivityTaskCompletedEventAttributes:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/commonPayloads'
+        title: 'Serialized results of the activity. IE: The return value of the activity function'
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_SCHEDULED` event this completion corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_STARTED` event this completion corresponds to
+      identity:
+        type: string
+        title: id of the worker that completed this task
+      workerVersion:
+        $ref: '#/definitions/commonWorkerVersionStamp'
+        description: Version info of the worker who processed this workflow task.
+  historyActivityTaskFailedEventAttributes:
+    type: object
+    properties:
+      failure:
+        $ref: '#/definitions/failureFailure'
+        title: Failure details
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_SCHEDULED` event this failure corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_STARTED` event this failure corresponds to
+      identity:
+        type: string
+        title: id of the worker that failed this task
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+      workerVersion:
+        $ref: '#/definitions/commonWorkerVersionStamp'
+        description: Version info of the worker who processed this workflow task.
+  historyActivityTaskScheduledEventAttributes:
+    type: object
+    properties:
+      activityId:
+        type: string
+        title: The worker/user assigned identifier for the activity
+      activityType:
+        $ref: '#/definitions/commonActivityType'
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      header:
+        $ref: '#/definitions/commonHeader'
+      input:
+        $ref: '#/definitions/commonPayloads'
+      scheduleToCloseTimeout:
+        type: string
+        description: |-
+          Indicates how long the caller is willing to wait for an activity completion. Limits how long
+          retries will be attempted. Either this or `start_to_close_timeout` must be specified.
+
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+      scheduleToStartTimeout:
+        type: string
+        description: |-
+          Limits time an activity task can stay in a task queue before a worker picks it up. This
+          timeout is always non retryable, as all a retry would achieve is to put it back into the same
+          queue. Defaults to `schedule_to_close_timeout` or workflow execution timeout if not
+          specified.
+
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+      startToCloseTimeout:
+        type: string
+        description: |-
+          Maximum time an activity is allowed to execute after being picked up by a worker. This
+          timeout is always retryable. Either this or `schedule_to_close_timeout` must be
+          specified.
+
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+      heartbeatTimeout:
+        type: string
+        description: Maximum permitted time between successful worker heartbeats.
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+        description: |-
+          Activities are assigned a default retry policy controlled by the service's dynamic
+          configuration. Retries will happen up to `schedule_to_close_timeout`. To disable retries set
+          retry_policy.maximum_attempts to 1.
+      useCompatibleVersion:
+        type: boolean
+        description: |-
+          If this is set, the workflow executing this command wishes to start the activity using
+          a version compatible with the version that this workflow most recently ran on, if such
+          behavior is possible.
+  historyActivityTaskStartedEventAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_SCHEDULED` event this task corresponds to
+      identity:
+        type: string
+        title: id of the worker that picked up this task
+      requestId:
+        type: string
+        title: TODO ??
+      attempt:
+        type: integer
+        format: int32
+        title: Starting at 1, the number of times this task has been attempted
+      lastFailure:
+        $ref: '#/definitions/failureFailure'
+        description: |-
+          Will be set to the most recent failure details, if this task has previously failed and then
+          been retried.
+  historyActivityTaskTimedOutEventAttributes:
+    type: object
+    properties:
+      failure:
+        $ref: '#/definitions/failureFailure'
+        description: |-
+          If this activity had failed, was retried, and then timed out, that failure is stored as the
+          `cause` in here.
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_SCHEDULED` event this timeout corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `ACTIVITY_TASK_STARTED` event this timeout corresponds to
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+  historyChildWorkflowExecutionCanceledEventAttributes:
+    type: object
+    properties:
+      details:
+        $ref: '#/definitions/commonPayloads'
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      initiatedEventId:
+        type: string
+        format: int64
+        title: Id of the `START_CHILD_WORKFLOW_EXECUTION_INITIATED` event which this event corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: Id of the `CHILD_WORKFLOW_EXECUTION_STARTED` event which this event corresponds to
+  historyChildWorkflowExecutionCompletedEventAttributes:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/commonPayloads'
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      initiatedEventId:
+        type: string
+        format: int64
+        title: Id of the `START_CHILD_WORKFLOW_EXECUTION_INITIATED` event which this event corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: Id of the `CHILD_WORKFLOW_EXECUTION_STARTED` event which this event corresponds to
+  historyChildWorkflowExecutionFailedEventAttributes:
+    type: object
+    properties:
+      failure:
+        $ref: '#/definitions/failureFailure'
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      initiatedEventId:
+        type: string
+        format: int64
+        title: Id of the `START_CHILD_WORKFLOW_EXECUTION_INITIATED` event which this event corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: Id of the `CHILD_WORKFLOW_EXECUTION_STARTED` event which this event corresponds to
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+  historyChildWorkflowExecutionStartedEventAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      initiatedEventId:
+        type: string
+        format: int64
+        title: Id of the `START_CHILD_WORKFLOW_EXECUTION_INITIATED` event which this event corresponds to
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      header:
+        $ref: '#/definitions/commonHeader'
+  historyChildWorkflowExecutionTerminatedEventAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      initiatedEventId:
+        type: string
+        format: int64
+        title: Id of the `START_CHILD_WORKFLOW_EXECUTION_INITIATED` event which this event corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: Id of the `CHILD_WORKFLOW_EXECUTION_STARTED` event which this event corresponds to
+  historyChildWorkflowExecutionTimedOutEventAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      initiatedEventId:
+        type: string
+        format: int64
+        title: Id of the `START_CHILD_WORKFLOW_EXECUTION_INITIATED` event which this event corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: Id of the `CHILD_WORKFLOW_EXECUTION_STARTED` event which this event corresponds to
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+  historyExternalWorkflowExecutionCancelRequestedEventAttributes:
+    type: object
+    properties:
+      initiatedEventId:
+        type: string
+        format: int64
+        title: |-
+          id of the `REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_INITIATED` event this event corresponds
+          to
+      namespace:
+        type: string
+        description: |-
+          Namespace of the to-be-cancelled workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+  historyExternalWorkflowExecutionSignaledEventAttributes:
+    type: object
+    properties:
+      initiatedEventId:
+        type: string
+        format: int64
+        title: id of the `SIGNAL_EXTERNAL_WORKFLOW_EXECUTION_INITIATED` event this event corresponds to
+      namespace:
+        type: string
+        description: |-
+          Namespace of the workflow which was signaled.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      control:
+        type: string
+        title: Deprecated
+  historyHistory:
+    type: object
+    properties:
+      events:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/historyHistoryEvent'
+  historyHistoryEvent:
+    type: object
+    properties:
+      eventId:
+        type: string
+        format: int64
+        description: Monotonically increasing event number, starts at 1.
+      eventTime:
+        type: string
+        format: date-time
+      eventType:
+        $ref: '#/definitions/enumsEventType'
+      version:
+        type: string
+        format: int64
+        title: 'TODO: What is this? Appears unused by SDKs'
+      taskId:
+        type: string
+        format: int64
+        title: 'TODO: What is this? Appears unused by SDKs'
+      workerMayIgnore:
+        type: boolean
+        description: |-
+          Set to true when the SDK may ignore the event as it does not impact workflow state or
+          information in any way that the SDK need be concerned with. If an SDK encounters an event
+          type which it does not understand, it must error unless this is true. If it is true, it's
+          acceptable for the event type and/or attributes to be uninterpretable.
+      workflowExecutionStartedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionStartedEventAttributes'
+      workflowExecutionCompletedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionCompletedEventAttributes'
+      workflowExecutionFailedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionFailedEventAttributes'
+      workflowExecutionTimedOutEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionTimedOutEventAttributes'
+      workflowTaskScheduledEventAttributes:
+        $ref: '#/definitions/historyWorkflowTaskScheduledEventAttributes'
+      workflowTaskStartedEventAttributes:
+        $ref: '#/definitions/historyWorkflowTaskStartedEventAttributes'
+      workflowTaskCompletedEventAttributes:
+        $ref: '#/definitions/historyWorkflowTaskCompletedEventAttributes'
+      workflowTaskTimedOutEventAttributes:
+        $ref: '#/definitions/historyWorkflowTaskTimedOutEventAttributes'
+      workflowTaskFailedEventAttributes:
+        $ref: '#/definitions/historyWorkflowTaskFailedEventAttributes'
+      activityTaskScheduledEventAttributes:
+        $ref: '#/definitions/historyActivityTaskScheduledEventAttributes'
+      activityTaskStartedEventAttributes:
+        $ref: '#/definitions/historyActivityTaskStartedEventAttributes'
+      activityTaskCompletedEventAttributes:
+        $ref: '#/definitions/historyActivityTaskCompletedEventAttributes'
+      activityTaskFailedEventAttributes:
+        $ref: '#/definitions/historyActivityTaskFailedEventAttributes'
+      activityTaskTimedOutEventAttributes:
+        $ref: '#/definitions/historyActivityTaskTimedOutEventAttributes'
+      timerStartedEventAttributes:
+        $ref: '#/definitions/historyTimerStartedEventAttributes'
+      timerFiredEventAttributes:
+        $ref: '#/definitions/historyTimerFiredEventAttributes'
+      activityTaskCancelRequestedEventAttributes:
+        $ref: '#/definitions/historyActivityTaskCancelRequestedEventAttributes'
+      activityTaskCanceledEventAttributes:
+        $ref: '#/definitions/historyActivityTaskCanceledEventAttributes'
+      timerCanceledEventAttributes:
+        $ref: '#/definitions/historyTimerCanceledEventAttributes'
+      markerRecordedEventAttributes:
+        $ref: '#/definitions/historyMarkerRecordedEventAttributes'
+      workflowExecutionSignaledEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionSignaledEventAttributes'
+      workflowExecutionTerminatedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionTerminatedEventAttributes'
+      workflowExecutionCancelRequestedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionCancelRequestedEventAttributes'
+      workflowExecutionCanceledEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionCanceledEventAttributes'
+      requestCancelExternalWorkflowExecutionInitiatedEventAttributes:
+        $ref: '#/definitions/historyRequestCancelExternalWorkflowExecutionInitiatedEventAttributes'
+      requestCancelExternalWorkflowExecutionFailedEventAttributes:
+        $ref: '#/definitions/historyRequestCancelExternalWorkflowExecutionFailedEventAttributes'
+      externalWorkflowExecutionCancelRequestedEventAttributes:
+        $ref: '#/definitions/historyExternalWorkflowExecutionCancelRequestedEventAttributes'
+      workflowExecutionContinuedAsNewEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionContinuedAsNewEventAttributes'
+      startChildWorkflowExecutionInitiatedEventAttributes:
+        $ref: '#/definitions/historyStartChildWorkflowExecutionInitiatedEventAttributes'
+      startChildWorkflowExecutionFailedEventAttributes:
+        $ref: '#/definitions/historyStartChildWorkflowExecutionFailedEventAttributes'
+      childWorkflowExecutionStartedEventAttributes:
+        $ref: '#/definitions/historyChildWorkflowExecutionStartedEventAttributes'
+      childWorkflowExecutionCompletedEventAttributes:
+        $ref: '#/definitions/historyChildWorkflowExecutionCompletedEventAttributes'
+      childWorkflowExecutionFailedEventAttributes:
+        $ref: '#/definitions/historyChildWorkflowExecutionFailedEventAttributes'
+      childWorkflowExecutionCanceledEventAttributes:
+        $ref: '#/definitions/historyChildWorkflowExecutionCanceledEventAttributes'
+      childWorkflowExecutionTimedOutEventAttributes:
+        $ref: '#/definitions/historyChildWorkflowExecutionTimedOutEventAttributes'
+      childWorkflowExecutionTerminatedEventAttributes:
+        $ref: '#/definitions/historyChildWorkflowExecutionTerminatedEventAttributes'
+      signalExternalWorkflowExecutionInitiatedEventAttributes:
+        $ref: '#/definitions/historySignalExternalWorkflowExecutionInitiatedEventAttributes'
+      signalExternalWorkflowExecutionFailedEventAttributes:
+        $ref: '#/definitions/historySignalExternalWorkflowExecutionFailedEventAttributes'
+      externalWorkflowExecutionSignaledEventAttributes:
+        $ref: '#/definitions/historyExternalWorkflowExecutionSignaledEventAttributes'
+      upsertWorkflowSearchAttributesEventAttributes:
+        $ref: '#/definitions/historyUpsertWorkflowSearchAttributesEventAttributes'
+      workflowExecutionUpdateAcceptedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionUpdateAcceptedEventAttributes'
+      workflowExecutionUpdateRejectedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionUpdateRejectedEventAttributes'
+      workflowExecutionUpdateCompletedEventAttributes:
+        $ref: '#/definitions/historyWorkflowExecutionUpdateCompletedEventAttributes'
+      workflowPropertiesModifiedExternallyEventAttributes:
+        $ref: '#/definitions/historyWorkflowPropertiesModifiedExternallyEventAttributes'
+      activityPropertiesModifiedExternallyEventAttributes:
+        $ref: '#/definitions/historyActivityPropertiesModifiedExternallyEventAttributes'
+      workflowPropertiesModifiedEventAttributes:
+        $ref: '#/definitions/historyWorkflowPropertiesModifiedEventAttributes'
+    description: |-
+      History events are the method by which Temporal SDKs advance (or recreate) workflow state.
+      See the `EventType` enum for more info about what each event is for.
+  historyMarkerRecordedEventAttributes:
+    type: object
+    properties:
+      markerName:
+        type: string
+        description: 'Workers use this to identify the "types" of various markers. Ex: Local activity, side effect.'
+      details:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/commonPayloads'
+        title: Serialized information recorded in the marker
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      header:
+        $ref: '#/definitions/commonHeader'
+      failure:
+        $ref: '#/definitions/failureFailure'
+        description: Some uses of markers, like a local activity, could "fail". If they did that is recorded here.
+  historyRequestCancelExternalWorkflowExecutionFailedEventAttributes:
+    type: object
+    properties:
+      cause:
+        $ref: '#/definitions/enumsCancelExternalWorkflowExecutionFailedCause'
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      namespace:
+        type: string
+        description: |-
+          Namespace of the workflow which failed to cancel.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      initiatedEventId:
+        type: string
+        format: int64
+        title: |-
+          id of the `REQUEST_CANCEL_EXTERNAL_WORKFLOW_EXECUTION_INITIATED` event this failure
+          corresponds to
+      control:
+        type: string
+        title: Deprecated
+  historyRequestCancelExternalWorkflowExecutionInitiatedEventAttributes:
+    type: object
+    properties:
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      namespace:
+        type: string
+        description: |-
+          The namespace the workflow to be cancelled lives in.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      control:
+        type: string
+        title: Deprecated
+      childWorkflowOnly:
+        type: boolean
+        title: |-
+          Workers are expected to set this to true if the workflow they are requesting to cancel is
+          a child of the workflow which issued the request
+      reason:
+        type: string
+        title: Reason for requesting the cancellation
+  historySignalExternalWorkflowExecutionFailedEventAttributes:
+    type: object
+    properties:
+      cause:
+        $ref: '#/definitions/enumsSignalExternalWorkflowExecutionFailedCause'
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      namespace:
+        type: string
+        description: |-
+          Namespace of the workflow which failed the signal.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      initiatedEventId:
+        type: string
+        format: int64
+      control:
+        type: string
+        title: Deprecated
+  historySignalExternalWorkflowExecutionInitiatedEventAttributes:
+    type: object
+    properties:
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      namespace:
+        type: string
+        description: |-
+          Namespace of the to-be-signalled workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      signalName:
+        type: string
+        title: name/type of the signal to fire in the external workflow
+      input:
+        $ref: '#/definitions/commonPayloads'
+        title: Serialized arguments to provide to the signal handler
+      control:
+        type: string
+        title: Deprecated
+      childWorkflowOnly:
+        type: boolean
+        title: |-
+          Workers are expected to set this to true if the workflow they are requesting to cancel is
+          a child of the workflow which issued the request
+      header:
+        $ref: '#/definitions/commonHeader'
+  historyStartChildWorkflowExecutionFailedEventAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowId:
+        type: string
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      cause:
+        $ref: '#/definitions/enumsStartChildWorkflowExecutionFailedCause'
+      control:
+        type: string
+        title: Deprecated
+      initiatedEventId:
+        type: string
+        format: int64
+        title: Id of the `START_CHILD_WORKFLOW_EXECUTION_INITIATED` event which this event corresponds to
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+  historyStartChildWorkflowExecutionInitiatedEventAttributes:
+    type: object
+    properties:
+      namespace:
+        type: string
+        description: |-
+          Namespace of the child workflow.
+          SDKs and UI tools should use `namespace` field but server must use `namespace_id` only.
+      namespaceId:
+        type: string
+      workflowId:
+        type: string
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      input:
+        $ref: '#/definitions/commonPayloads'
+      workflowExecutionTimeout:
+        type: string
+        description: Total workflow execution timeout including retries and continue as new.
+      workflowRunTimeout:
+        type: string
+        description: Timeout of a single workflow run.
+      workflowTaskTimeout:
+        type: string
+        description: Timeout of a single workflow task.
+      parentClosePolicy:
+        $ref: '#/definitions/enumsParentClosePolicy'
+        description: 'Default: PARENT_CLOSE_POLICY_TERMINATE.'
+      control:
+        type: string
+        title: Deprecated
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      workflowIdReusePolicy:
+        $ref: '#/definitions/enumsWorkflowIdReusePolicy'
+        description: 'Default: WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE.'
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+      cronSchedule:
+        type: string
+        title: If this child runs on a cron schedule, it will appear here
+      header:
+        $ref: '#/definitions/commonHeader'
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      useCompatibleVersion:
+        type: boolean
+        description: |-
+          If this is set, the workflow executing this command wishes to start the child workflow using
+          a version compatible with the version that this workflow most recently ran on, if such
+          behavior is possible.
+  historyTimerCanceledEventAttributes:
+    type: object
+    properties:
+      timerId:
+        type: string
+        title: Will match the `timer_id` from `TIMER_STARTED` event for this timer
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `TIMER_STARTED` event itself
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      identity:
+        type: string
+        title: The id of the worker who requested this cancel
+  historyTimerFiredEventAttributes:
+    type: object
+    properties:
+      timerId:
+        type: string
+        title: Will match the `timer_id` from `TIMER_STARTED` event for this timer
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `TIMER_STARTED` event itself
+  historyTimerStartedEventAttributes:
+    type: object
+    properties:
+      timerId:
+        type: string
+        title: The worker/user assigned id for this timer
+      startToFireTimeout:
+        type: string
+        description: |-
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+        title: How long until this timer fires
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+  historyUpsertWorkflowSearchAttributesEventAttributes:
+    type: object
+    properties:
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+  historyWorkflowExecutionCancelRequestedEventAttributes:
+    type: object
+    properties:
+      cause:
+        type: string
+        title: |-
+          User provided reason for requesting cancellation
+          TODO: shall we create a new field with name "reason" and deprecate this one?
+      externalInitiatedEventId:
+        type: string
+        format: int64
+        title: 'TODO: Is this the ID of the event in the workflow which initiated this cancel, if there was one?'
+      externalWorkflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      identity:
+        type: string
+        title: id of the worker or client who requested this cancel
+  historyWorkflowExecutionCanceledEventAttributes:
+    type: object
+    properties:
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      details:
+        $ref: '#/definitions/commonPayloads'
+  historyWorkflowExecutionCompletedEventAttributes:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/commonPayloads'
+        title: 'Serialized result of workflow completion (ie: The return value of the workflow function)'
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      newExecutionRunId:
+        type: string
+        description: If another run is started by cron, this contains the new run id.
+  historyWorkflowExecutionContinuedAsNewEventAttributes:
+    type: object
+    properties:
+      newExecutionRunId:
+        type: string
+        title: The run ID of the new workflow started by this continue-as-new
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      input:
+        $ref: '#/definitions/commonPayloads'
+      workflowRunTimeout:
+        type: string
+        description: Timeout of a single workflow run.
+      workflowTaskTimeout:
+        type: string
+        description: Timeout of a single workflow task.
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      backoffStartInterval:
+        type: string
+        title: 'TODO: How and is this used?'
+      initiator:
+        $ref: '#/definitions/enumsContinueAsNewInitiator'
+      failure:
+        $ref: '#/definitions/failureFailure'
+        description: |-
+          TODO: David are these right?
+          Deprecated. If a workflow's retry policy would cause a new run to start when the current one
+          has failed, this field would be populated with that failure. Now (when supported by server
+          and sdk) the final event will be `WORKFLOW_EXECUTION_FAILED` with `new_execution_run_id` set.
+      lastCompletionResult:
+        $ref: '#/definitions/commonPayloads'
+        title: 'TODO: Is this the result of *this* workflow as it continued-as-new?'
+      header:
+        $ref: '#/definitions/commonHeader'
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      useCompatibleVersion:
+        type: boolean
+        description: |-
+          If this is set, the workflow executing this command wishes to continue as new using a version
+          compatible with the version that this workflow most recently ran on.
+  historyWorkflowExecutionFailedEventAttributes:
+    type: object
+    properties:
+      failure:
+        $ref: '#/definitions/failureFailure'
+        title: 'Serialized result of workflow failure (ex: An exception thrown, or error returned)'
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      newExecutionRunId:
+        type: string
+        description: If another run is started by cron or retry, this contains the new run id.
+  historyWorkflowExecutionSignaledEventAttributes:
+    type: object
+    properties:
+      signalName:
+        type: string
+        title: The name/type of the signal to fire
+      input:
+        $ref: '#/definitions/commonPayloads'
+        title: Will be deserialized and provided as argument(s) to the signal handler
+      identity:
+        type: string
+        title: id of the worker/client who sent this signal
+      header:
+        $ref: '#/definitions/commonHeader'
+        description: "Headers that were passed by the sender of the signal and copied by temporal \nserver into the workflow task."
+      skipGenerateWorkflowTask:
+        type: boolean
+        description: Indicates the signal did not generate a new workflow task when received.
+  historyWorkflowExecutionStartedEventAttributes:
+    type: object
+    properties:
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      parentWorkflowNamespace:
+        type: string
+        description: |-
+          If this workflow is a child, the namespace our parent lives in.
+          SDKs and UI tools should use `parent_workflow_namespace` field but server must use `parent_workflow_namespace_id` only.
+      parentWorkflowNamespaceId:
+        type: string
+      parentWorkflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+        description: |-
+          Contains information about parent workflow execution that initiated the child workflow these attributes belong to.
+          If the workflow these attributes belong to is not a child workflow of any other execution, this field will not be populated.
+      parentInitiatedEventId:
+        type: string
+        format: int64
+        title: EventID of the child execution initiated event in parent workflow
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      input:
+        $ref: '#/definitions/commonPayloads'
+        title: SDK will deserialize this and provide it as arguments to the workflow function
+      workflowExecutionTimeout:
+        type: string
+        description: Total workflow execution timeout including retries and continue as new.
+      workflowRunTimeout:
+        type: string
+        description: Timeout of a single workflow run.
+      workflowTaskTimeout:
+        type: string
+        description: Timeout of a single workflow task.
+      continuedExecutionRunId:
+        type: string
+        description: |-
+          Run id of the previous workflow which continued-as-new or retired or cron executed into this
+          workflow.
+      initiator:
+        $ref: '#/definitions/enumsContinueAsNewInitiator'
+      continuedFailure:
+        $ref: '#/definitions/failureFailure'
+      lastCompletionResult:
+        $ref: '#/definitions/commonPayloads'
+      originalExecutionRunId:
+        type: string
+        description: |-
+          This is the run id when the WorkflowExecutionStarted event was written.
+          A workflow reset changes the execution run_id, but preserves this field.
+      identity:
+        type: string
+        title: Identity of the client who requested this execution
+      firstExecutionRunId:
+        type: string
+        description: |-
+          This is the very first runId along the chain of ContinueAsNew, Retry, Cron and Reset.
+          Used to identify a chain.
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+      attempt:
+        type: integer
+        format: int32
+        title: Starting at 1, the number of times we have tried to execute this workflow
+      workflowExecutionExpirationTime:
+        type: string
+        format: date-time
+        description: |-
+          The absolute time at which the workflow will be timed out.
+          This is passed without change to the next run/retry of a workflow.
+      cronSchedule:
+        type: string
+        title: If this workflow runs on a cron schedule, it will appear here
+      firstWorkflowTaskBackoff:
+        type: string
+        description: |-
+          For a cron workflow, this contains the amount of time between when this iteration of
+          the cron workflow was scheduled and when it should run next per its cron_schedule.
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      prevAutoResetPoints:
+        $ref: '#/definitions/workflowResetPoints'
+      header:
+        $ref: '#/definitions/commonHeader'
+      parentInitiatedEventVersion:
+        type: string
+        format: int64
+        title: |-
+          Version of the child execution initiated event in parent workflow
+          It should be used together with parent_initiated_event_id to identify
+          a child initiated event for global namespace
+      workflowId:
+        type: string
+        description: This field is new in 1.21.
+      sourceVersionStamp:
+        $ref: '#/definitions/commonWorkerVersionStamp'
+        description: |-
+          If this workflow intends to use anything other than the current overall default version for
+          the queue, then we include it here.
+    title: Always the first event in workflow history
+  historyWorkflowExecutionTerminatedEventAttributes:
+    type: object
+    properties:
+      reason:
+        type: string
+        title: User/client provided reason for termination
+      details:
+        $ref: '#/definitions/commonPayloads'
+      identity:
+        type: string
+        title: id of the client who requested termination
+  historyWorkflowExecutionTimedOutEventAttributes:
+    type: object
+    properties:
+      retryState:
+        $ref: '#/definitions/enumsRetryState'
+      newExecutionRunId:
+        type: string
+        description: If another run is started by cron or retry, this contains the new run id.
+  historyWorkflowExecutionUpdateAcceptedEventAttributes:
+    type: object
+    properties:
+      protocolInstanceId:
+        type: string
+        description: The instance ID of the update protocol that generated this event.
+      acceptedRequestMessageId:
+        type: string
+        description: |-
+          The message ID of the original request message that initiated this
+          update. Needed so that the worker can recreate and deliver that same
+          message as part of replay.
+      acceptedRequestSequencingEventId:
+        type: string
+        format: int64
+        description: The event ID used to sequence the original request message.
+      acceptedRequest:
+        $ref: '#/definitions/updateRequest'
+        description: |-
+          The message payload of the original request message that initiated this
+          update.
+  historyWorkflowExecutionUpdateCompletedEventAttributes:
+    type: object
+    properties:
+      meta:
+        $ref: '#/definitions/updateMeta'
+        description: The metadata about this update.
+      acceptedEventId:
+        type: string
+        format: int64
+        description: The event ID indicating the acceptance of this update.
+      outcome:
+        $ref: '#/definitions/updateOutcome'
+        description: The outcome of executing the workflow update function.
+  historyWorkflowExecutionUpdateRejectedEventAttributes:
+    type: object
+    properties:
+      protocolInstanceId:
+        type: string
+        description: The instance ID of the update protocol that generated this event.
+      rejectedRequestMessageId:
+        type: string
+        description: |-
+          The message ID of the original request message that initiated this
+          update. Needed so that the worker can recreate and deliver that same
+          message as part of replay.
+      rejectedRequestSequencingEventId:
+        type: string
+        format: int64
+        description: The event ID used to sequence the original request message.
+      rejectedRequest:
+        $ref: '#/definitions/updateRequest'
+        description: |-
+          The message payload of the original request message that initiated this
+          update.
+      failure:
+        $ref: '#/definitions/failureFailure'
+        description: The cause of rejection.
+  historyWorkflowPropertiesModifiedEventAttributes:
+    type: object
+    properties:
+      workflowTaskCompletedEventId:
+        type: string
+        format: int64
+        title: The `WORKFLOW_TASK_COMPLETED` event which this command was reported with
+      upsertedMemo:
+        $ref: '#/definitions/commonMemo'
+        description: |-
+          If set, update the workflow memo with the provided values. The values will be merged with
+          the existing memo. If the user wants to delete values, a default/empty Payload should be
+          used as the value for the key being deleted.
+  historyWorkflowPropertiesModifiedExternallyEventAttributes:
+    type: object
+    properties:
+      newTaskQueue:
+        type: string
+        description: |-
+          If set to a nonempty string, future workflow tasks for this workflow shall be dispatched on
+          the provided queue.
+      newWorkflowTaskTimeout:
+        type: string
+        description: If set, update the workflow task timeout to this value.
+      newWorkflowRunTimeout:
+        type: string
+        description: If set, update the workflow run timeout to this value. May be set to 0 for no timeout.
+      newWorkflowExecutionTimeout:
+        type: string
+        description: If set, update the workflow execution timeout to this value. May be set to 0 for no timeout.
+      upsertedMemo:
+        $ref: '#/definitions/commonMemo'
+        description: |-
+          If set, update the workflow memo with the provided values. The values will be merged with
+          the existing memo. If the user wants to delete values, a default/empty Payload should be
+          used as the value for the key being deleted.
+  historyWorkflowTaskCompletedEventAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `WORKFLOW_TASK_SCHEDULED` event this task corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `WORKFLOW_TASK_STARTED` event this task corresponds to
+      identity:
+        type: string
+        title: Identity of the worker who completed this task
+      binaryChecksum:
+        type: string
+        title: Binary ID of the worker who completed this task
+      workerVersion:
+        $ref: '#/definitions/commonWorkerVersionStamp'
+        description: |-
+          Version info of the worker who processed this workflow task. If present, the `build_id` field
+          within is also used as `binary_checksum`, which may be omitted in that case (it may also be
+          populated to preserve compatibility).
+      sdkMetadata:
+        $ref: '#/definitions/sdkWorkflowTaskCompletedMetadata'
+        description: |-
+          Data the SDK wishes to record for itself, but server need not interpret, and does not
+          directly impact workflow state.
+      meteringMetadata:
+        $ref: '#/definitions/commonMeteringMetadata'
+        title: Local usage data sent during workflow task completion and recorded here for posterity
+  historyWorkflowTaskFailedEventAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `WORKFLOW_TASK_SCHEDULED` event this task corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `WORKFLOW_TASK_STARTED` event this task corresponds to
+      cause:
+        $ref: '#/definitions/enumsWorkflowTaskFailedCause'
+      failure:
+        $ref: '#/definitions/failureFailure'
+        title: The failure details
+      identity:
+        type: string
+        title: 'If a worker explicitly failed this task, it''s identity. TODO: What is this set to if server fails the task?'
+      baseRunId:
+        type: string
+        description: The original run id of the workflow. For reset workflow.
+      newRunId:
+        type: string
+        description: If the workflow is being reset, the new run id.
+      forkEventVersion:
+        type: string
+        format: int64
+        title: 'TODO: ?'
+      binaryChecksum:
+        type: string
+        title: |-
+          DEPRECATED since 1.21 - use `worker_version` instead.
+          If a worker explicitly failed this task, its binary id
+      workerVersion:
+        $ref: '#/definitions/commonWorkerVersionStamp'
+        description: |-
+          Version info of the worker who processed this workflow task. If present, the `build_id` field
+          within is also used as `binary_checksum`, which may be omitted in that case (it may also be
+          populated to preserve compatibility).
+  historyWorkflowTaskScheduledEventAttributes:
+    type: object
+    properties:
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+        title: The task queue this workflow task was enqueued in, which could be a normal or sticky queue
+      startToCloseTimeout:
+        type: string
+        description: |-
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+        title: How long the worker has to process this task once receiving it before it times out
+      attempt:
+        type: integer
+        format: int32
+        title: Starting at 1, how many attempts there have been to complete this task
+  historyWorkflowTaskStartedEventAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `WORKFLOW_TASK_SCHEDULED` event this task corresponds to
+      identity:
+        type: string
+        title: Identity of the worker who picked up this task
+      requestId:
+        type: string
+        title: 'TODO: ? Appears unused?'
+      suggestContinueAsNew:
+        type: boolean
+        description: |-
+          True if this workflow should continue-as-new soon because its history size (in
+          either event count or bytes) is getting large.
+      historySizeBytes:
+        type: string
+        format: int64
+        description: |-
+          Total history size in bytes, which the workflow might use to decide when to
+          continue-as-new regardless of the suggestion. Note that history event count is
+          just the event id of this event, so we don't include it explicitly here.
+  historyWorkflowTaskTimedOutEventAttributes:
+    type: object
+    properties:
+      scheduledEventId:
+        type: string
+        format: int64
+        title: The id of the `WORKFLOW_TASK_SCHEDULED` event this task corresponds to
+      startedEventId:
+        type: string
+        format: int64
+        title: The id of the `WORKFLOW_TASK_STARTED` event this task corresponds to
+      timeoutType:
+        $ref: '#/definitions/enumsTimeoutType'
+  namespaceBadBinaries:
+    type: object
+    properties:
+      binaries:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/namespaceBadBinaryInfo'
+  namespaceBadBinaryInfo:
+    type: object
+    properties:
+      reason:
+        type: string
+      operator:
+        type: string
+      createTime:
+        type: string
+        format: date-time
+  namespaceNamespaceConfig:
+    type: object
+    properties:
+      workflowExecutionRetentionTtl:
+        type: string
+      badBinaries:
+        $ref: '#/definitions/namespaceBadBinaries'
+      historyArchivalState:
+        $ref: '#/definitions/enumsArchivalState'
+        description: If unspecified (ARCHIVAL_STATE_UNSPECIFIED) then default server configuration is used.
+      historyArchivalUri:
+        type: string
+      visibilityArchivalState:
+        $ref: '#/definitions/enumsArchivalState'
+        description: If unspecified (ARCHIVAL_STATE_UNSPECIFIED) then default server configuration is used.
+      visibilityArchivalUri:
+        type: string
+      customSearchAttributeAliases:
+        type: object
+        additionalProperties:
+          type: string
+        description: Map from field name to alias.
+  namespaceNamespaceFilter:
+    type: object
+    properties:
+      includeDeleted:
+        type: boolean
+        description: |-
+          By default namespaces in NAMESPACE_STATE_DELETED state are not included.
+          Setting include_deleted to true will include deleted namespaces.
+          Note: Namespace is in NAMESPACE_STATE_DELETED state when it was deleted from the system but associated data is not deleted yet.
+  namespaceNamespaceInfo:
+    type: object
+    properties:
+      name:
+        type: string
+      state:
+        $ref: '#/definitions/enumsNamespaceState'
+      description:
+        type: string
+      ownerEmail:
+        type: string
+      data:
+        type: object
+        additionalProperties:
+          type: string
+        description: A key-value map for any customized purpose.
+      id:
+        type: string
+      supportsSchedules:
+        type: boolean
+        description: |-
+          Whether scheduled workflows are supported on this namespace. This is only needed
+          temporarily while the feature is experimental, so we can give it a high tag.
+  namespaceUpdateNamespaceInfo:
+    type: object
+    properties:
+      description:
+        type: string
+      ownerEmail:
+        type: string
+      data:
+        type: object
+        additionalProperties:
+          type: string
+        description: "A key-value map for any customized purpose.\nIf data already exists on the namespace, \nthis will merge with the existing key values."
+      state:
+        $ref: '#/definitions/enumsNamespaceState'
+        description: |-
+          New namespace state, server will reject if transition is not allowed.
+          Allowed transitions are:
+           Registered -> [ Deleted | Deprecated | Handover ]
+           Handover -> [ Registered ]
+          Default is NAMESPACE_STATE_UNSPECIFIED which is do not change state.
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+        description: |-
+          A URL/resource name that uniquely identifies the type of the serialized
+          protocol buffer message. This string must contain at least
+          one "/" character. The last segment of the URL's path must represent
+          the fully qualified name of the type (as in
+          `path/google.protobuf.Duration`). The name should be in a canonical form
+          (e.g., leading "." is not accepted).
+
+          In practice, teams usually precompile into the binary all types that they
+          expect it to use in the context of Any. However, for URLs which use the
+          scheme `http`, `https`, or no scheme, one can optionally set up a type
+          server that maps type URLs to message definitions as follows:
+
+          * If no scheme is provided, `https` is assumed.
+          * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+            value in binary format, or produce an error.
+          * Applications are allowed to cache lookup results based on the
+            URL, or have them precompiled into a binary to avoid any
+            lookup. Therefore, binary compatibility needs to be preserved
+            on changes to types. (Use versioned type names to manage
+            breaking changes.)
+
+          Note: this functionality is not currently available in the official
+          protobuf release, and it is not used for type URLs beginning with
+          type.googleapis.com.
+
+          Schemes other than `http`, `https` (or the empty scheme) might be
+          used with implementation specific semantics.
+    additionalProperties: {}
+    description: |-
+      `Any` contains an arbitrary serialized protocol buffer message along with a
+      URL that describes the type of the serialized message.
+
+      Protobuf library provides support to pack/unpack Any values in the form
+      of utility functions or additional generated methods of the Any type.
+
+      Example 1: Pack and unpack a message in C++.
+
+          Foo foo = ...;
+          Any any;
+          any.PackFrom(foo);
+          ...
+          if (any.UnpackTo(&foo)) {
+            ...
+          }
+
+      Example 2: Pack and unpack a message in Java.
+
+          Foo foo = ...;
+          Any any = Any.pack(foo);
+          ...
+          if (any.is(Foo.class)) {
+            foo = any.unpack(Foo.class);
+          }
+          // or ...
+          if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+            foo = any.unpack(Foo.getDefaultInstance());
+          }
+
+      Example 3: Pack and unpack a message in Python.
+
+          foo = Foo(...)
+          any = Any()
+          any.Pack(foo)
+          ...
+          if any.Is(Foo.DESCRIPTOR):
+            any.Unpack(foo)
+            ...
+
+      Example 4: Pack and unpack a message in Go
+
+           foo := &pb.Foo{...}
+           any, err := anypb.New(foo)
+           if err != nil {
+             ...
+           }
+           ...
+           foo := &pb.Foo{}
+           if err := any.UnmarshalTo(foo); err != nil {
+             ...
+           }
+
+      The pack methods provided by protobuf library will by default use
+      'type.googleapis.com/full.type.name' as the type URL and the unpack
+      methods only use the fully qualified type name after the last '/'
+      in the type URL, for example "foo.bar.com/x/y.z" will yield type
+      name "y.z".
+
+      JSON
+
+      The JSON representation of an `Any` value uses the regular
+      representation of the deserialized, embedded message, with an
+      additional field `@type` which contains the type URL. Example:
+
+          package google.profile;
+          message Person {
+            string first_name = 1;
+            string last_name = 2;
+          }
+
+          {
+            "@type": "type.googleapis.com/google.profile.Person",
+            "firstName": <string>,
+            "lastName": <string>
+          }
+
+      If the embedded message type is well-known and has a custom JSON
+      representation, that representation will be embedded adding a field
+      `value` which holds the custom JSON in addition to the `@type`
+      field. Example (for message [google.protobuf.Duration][]):
+
+          {
+            "@type": "type.googleapis.com/google.protobuf.Duration",
+            "value": "1.212s"
+          }
+  protocolMessage:
+    type: object
+    properties:
+      id:
+        type: string
+        description: An ID for this specific message.
+      protocolInstanceId:
+        type: string
+        description: |-
+          Identifies the specific instance of a protocol to which this message
+          belongs.
+      eventId:
+        type: string
+        format: int64
+      commandIndex:
+        type: string
+        format: int64
+      body:
+        $ref: '#/definitions/protobufAny'
+        description: |-
+          The opaque data carried by this message. The protocol type can be
+          extracted from the package name of the message carried inside the Any.
+    title: |-
+      (-- api-linter: core::0146::any=disabled
+          aip.dev/not-precedent: We want runtime extensibility for the body field --)
+  queryQueryRejected:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/enumsWorkflowExecutionStatus'
+  queryWorkflowQuery:
+    type: object
+    properties:
+      queryType:
+        type: string
+        description: The workflow-author-defined identifier of the query. Typically a function name.
+      queryArgs:
+        $ref: '#/definitions/commonPayloads'
+        description: Serialized arguments that will be provided to the query handler.
+      header:
+        $ref: '#/definitions/commonHeader'
+        description: "Headers that were passed by the caller of the query and copied by temporal \nserver into the workflow task."
+    title: See https://docs.temporal.io/docs/concepts/queries/
+  queryWorkflowQueryResult:
+    type: object
+    properties:
+      resultType:
+        $ref: '#/definitions/enumsQueryResultType'
+        title: Did the query succeed or fail?
+      answer:
+        $ref: '#/definitions/commonPayloads'
+        title: Set when the query succeeds with the results
+      errorMessage:
+        type: string
+        description: Mutually exclusive with `answer`. Set when the query fails.
+    title: Answer to a `WorkflowQuery`
+  replicationClusterReplicationConfig:
+    type: object
+    properties:
+      clusterName:
+        type: string
+  replicationFailoverStatus:
+    type: object
+    properties:
+      failoverTime:
+        type: string
+        format: date-time
+        title: Timestamp when the Cluster switched to the following failover_version
+      failoverVersion:
+        type: string
+        format: int64
+    title: Represents a historical replication status of a Namespace
+  replicationNamespaceReplicationConfig:
+    type: object
+    properties:
+      activeClusterName:
+        type: string
+      clusters:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/replicationClusterReplicationConfig'
+      state:
+        $ref: '#/definitions/enumsReplicationState'
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
+  scheduleBackfillRequest:
+    type: object
+    properties:
+      startTime:
+        type: string
+        format: date-time
+        description: Time range to evaluate schedule in.
+      endTime:
+        type: string
+        format: date-time
+      overlapPolicy:
+        $ref: '#/definitions/enumsScheduleOverlapPolicy'
+        description: Override overlap policy for this request.
+  scheduleCalendarSpec:
+    type: object
+    properties:
+      second:
+        type: string
+        title: 'Expression to match seconds. Default: 0'
+      minute:
+        type: string
+        title: 'Expression to match minutes. Default: 0'
+      hour:
+        type: string
+        title: 'Expression to match hours. Default: 0'
+      dayOfMonth:
+        type: string
+        title: |-
+          Expression to match days of the month. Default: *
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: standard name of field --)
+      month:
+        type: string
+        title: 'Expression to match months. Default: *'
+      year:
+        type: string
+        title: 'Expression to match years. Default: *'
+      dayOfWeek:
+        type: string
+        title: 'Expression to match days of the week. Default: *'
+      comment:
+        type: string
+        description: Free-form comment describing the intention of this spec.
+    description: |-
+      CalendarSpec describes an event specification relative to the calendar,
+      similar to a traditional cron specification, but with labeled fields. Each
+      field can be one of:
+        *: matches always
+        x: matches when the field equals x
+        x/y : matches when the field equals x+n*y where n is an integer
+        x-z: matches when the field is between x and z inclusive
+        w,x,y,...: matches when the field is one of the listed values
+      Each x, y, z, ... is either a decimal integer, or a month or day of week name
+      or abbreviation (in the appropriate fields).
+      A timestamp matches if all fields match.
+      Note that fields have different default values, for convenience.
+      Note that the special case that some cron implementations have for treating
+      day_of_month and day_of_week as "or" instead of "and" when both are set is
+      not implemented.
+      day_of_week can accept 0 or 7 as Sunday
+      CalendarSpec gets compiled into StructuredCalendarSpec, which is what will be
+      returned if you describe the schedule.
+  scheduleIntervalSpec:
+    type: object
+    properties:
+      interval:
+        type: string
+      phase:
+        type: string
+    description: |-
+      IntervalSpec matches times that can be expressed as:
+      epoch + n * interval + phase
+      where n is an integer.
+      phase defaults to zero if missing. interval is required.
+      Both interval and phase must be non-negative and are truncated to the nearest
+      second before any calculations.
+      For example, an interval of 1 hour with phase of zero would match every hour,
+      on the hour. The same interval but a phase of 19 minutes would match every
+      xx:19:00. An interval of 28 days with phase zero would match
+      2022-02-17T00:00:00Z (among other times). The same interval with a phase of 3
+      days, 5 hours, and 23 minutes would match 2022-02-20T05:23:00Z instead.
+  scheduleRange:
+    type: object
+    properties:
+      start:
+        type: integer
+        format: int32
+        description: Start of range (inclusive).
+      end:
+        type: integer
+        format: int32
+        description: End of range (inclusive).
+      step:
+        type: integer
+        format: int32
+        description: Step (optional, default 1).
+    description: |-
+      Range represents a set of integer values, used to match fields of a calendar
+      time in StructuredCalendarSpec. If end < start, then end is interpreted as
+      equal to start. This means you can use a Range with start set to a value, and
+      end and step unset (defaulting to 0) to represent a single value.
+  scheduleSchedule:
+    type: object
+    properties:
+      spec:
+        $ref: '#/definitions/scheduleScheduleSpec'
+      action:
+        $ref: '#/definitions/scheduleScheduleAction'
+      policies:
+        $ref: '#/definitions/scheduleSchedulePolicies'
+      state:
+        $ref: '#/definitions/scheduleScheduleState'
+  scheduleScheduleAction:
+    type: object
+    properties:
+      startWorkflow:
+        $ref: '#/definitions/workflowNewWorkflowExecutionInfo'
+        description: |-
+          All fields of NewWorkflowExecutionInfo are valid except for:
+          - workflow_id_reuse_policy
+          - cron_schedule
+          The workflow id of the started workflow may not match this exactly,
+          it may have a timestamp appended for uniqueness.
+  scheduleScheduleActionResult:
+    type: object
+    properties:
+      scheduleTime:
+        type: string
+        format: date-time
+        description: Time that the action was taken (according to the schedule, including jitter).
+      actualTime:
+        type: string
+        format: date-time
+        description: Time that the action was taken (real time).
+      startWorkflowResult:
+        $ref: '#/definitions/commonWorkflowExecution'
+        title: 'If action was start_workflow:'
+  scheduleScheduleInfo:
+    type: object
+    properties:
+      actionCount:
+        type: string
+        format: int64
+        description: Number of actions taken so far.
+      missedCatchupWindow:
+        type: string
+        format: int64
+        description: Number of times a scheduled action was skipped due to missing the catchup window.
+      overlapSkipped:
+        type: string
+        format: int64
+        description: Number of skipped actions due to overlap.
+      runningWorkflows:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/commonWorkflowExecution'
+        description: |-
+          Currently-running workflows started by this schedule. (There might be
+          more than one if the overlap policy allows overlaps.)
+          Note that the run_ids in here are the original execution run ids as
+          started by the schedule. If the workflows retried, did continue-as-new,
+          or were reset, they might still be running but with a different run_id.
+      recentActions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleScheduleActionResult'
+        description: Most recent ten actual action times (including manual triggers).
+      futureActionTimes:
+        type: array
+        items:
+          type: string
+          format: date-time
+        description: Next ten scheduled action times.
+      createTime:
+        type: string
+        format: date-time
+        description: Timestamps of schedule creation and last update.
+      updateTime:
+        type: string
+        format: date-time
+      invalidScheduleError:
+        type: string
+  scheduleScheduleListEntry:
+    type: object
+    properties:
+      scheduleId:
+        type: string
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      info:
+        $ref: '#/definitions/scheduleScheduleListInfo'
+    description: ScheduleListEntry is returned by ListSchedules.
+  scheduleScheduleListInfo:
+    type: object
+    properties:
+      spec:
+        $ref: '#/definitions/scheduleScheduleSpec'
+        title: |-
+          From spec:
+          Some fields are dropped from this copy of spec: timezone_data
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+        title: |-
+          From action:
+          Action is a oneof field, but we need to encode this in JSON and oneof fields don't work
+          well with JSON. If action is start_workflow, this is set:
+      notes:
+        type: string
+        title: 'From state:'
+      paused:
+        type: boolean
+      recentActions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleScheduleActionResult'
+        title: 'From info (maybe fewer entries):'
+      futureActionTimes:
+        type: array
+        items:
+          type: string
+          format: date-time
+    description: |-
+      ScheduleListInfo is an abbreviated set of values from Schedule and ScheduleInfo
+      that's returned in ListSchedules.
+  scheduleSchedulePatch:
+    type: object
+    properties:
+      triggerImmediately:
+        $ref: '#/definitions/scheduleTriggerImmediatelyRequest'
+        description: If set, trigger one action immediately.
+      backfillRequest:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleBackfillRequest'
+        description: |-
+          If set, runs though the specified time period(s) and takes actions as if that time
+          passed by right now, all at once. The overlap policy can be overridden for the
+          scope of the backfill.
+      pause:
+        type: string
+        description: |-
+          If set, change the state to paused or unpaused (respectively) and set the
+          notes field to the value of the string.
+      unpause:
+        type: string
+  scheduleSchedulePolicies:
+    type: object
+    properties:
+      overlapPolicy:
+        $ref: '#/definitions/enumsScheduleOverlapPolicy'
+        description: |-
+          Policy for overlaps.
+          Note that this can be changed after a schedule has taken some actions,
+          and some changes might produce unintuitive results. In general, the later
+          policy overrides the earlier policy.
+      catchupWindow:
+        type: string
+        description: |-
+          Policy for catchups:
+          If the Temporal server misses an action due to one or more components
+          being down, and comes back up, the action will be run if the scheduled
+          time is within this window from the current time.
+          This value defaults to 60 seconds, and can't be less than 10 seconds.
+      pauseOnFailure:
+        type: boolean
+        description: |-
+          If true, and a workflow run fails or times out, turn on "paused".
+          This applies after retry policies: the full chain of retries must fail to
+          trigger a pause here.
+  scheduleScheduleSpec:
+    type: object
+    properties:
+      structuredCalendar:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleStructuredCalendarSpec'
+        description: Calendar-based specifications of times.
+      cronString:
+        type: array
+        items:
+          type: string
+        description: |-
+          cron_string holds a traditional cron specification as a string. It
+          accepts 5, 6, or 7 fields, separated by spaces, and interprets them the
+          same way as CalendarSpec.
+          5 fields:         minute, hour, day_of_month, month, day_of_week
+          6 fields:         minute, hour, day_of_month, month, day_of_week, year
+          7 fields: second, minute, hour, day_of_month, month, day_of_week, year
+          If year is not given, it defaults to *. If second is not given, it
+          defaults to 0.
+          Shorthands @yearly, @monthly, @weekly, @daily, and @hourly are also
+          accepted instead of the 5-7 time fields.
+          Optionally, the string can be preceded by CRON_TZ=<timezone name> or
+          TZ=<timezone name>, which will get copied to timezone_name. (There must
+          not also be a timezone_name present.)
+          Optionally "#" followed by a comment can appear at the end of the string.
+          Note that the special case that some cron implementations have for
+          treating day_of_month and day_of_week as "or" instead of "and" when both
+          are set is not implemented.
+          @every <interval>[/<phase>] is accepted and gets compiled into an
+          IntervalSpec instead. <interval> and <phase> should be a decimal integer
+          with a unit suffix s, m, h, or d.
+      calendar:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleCalendarSpec'
+        description: Calendar-based specifications of times.
+      interval:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleIntervalSpec'
+        description: Interval-based specifications of times.
+      excludeCalendar:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleCalendarSpec'
+        description: |-
+          Any timestamps matching any of exclude_* will be skipped.
+
+          use exclude_structured_calendar
+      excludeStructuredCalendar:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleStructuredCalendarSpec'
+      startTime:
+        type: string
+        format: date-time
+        title: |-
+          If start_time is set, any timestamps before start_time will be skipped.
+          (Together, start_time and end_time make an inclusive interval.)
+      endTime:
+        type: string
+        format: date-time
+        description: If end_time is set, any timestamps after end_time will be skipped.
+      jitter:
+        type: string
+        title: |-
+          All timestamps will be incremented by a random value from 0 to this
+          amount of jitter. Default: 0
+      timezoneName:
+        type: string
+        description: |-
+          Time zone to interpret all calendar-based specs in.
+
+          If unset, defaults to UTC. We recommend using UTC for your application if
+          at all possible, to avoid various surprising properties of time zones.
+
+          Time zones may be provided by name, corresponding to names in the IANA
+          time zone database (see https://www.iana.org/time-zones). The definition
+          will be loaded by the Temporal server from the environment it runs in.
+
+          If your application requires more control over the time zone definition
+          used, it may pass in a complete definition in the form of a TZif file
+          from the time zone database. If present, this will be used instead of
+          loading anything from the environment. You are then responsible for
+          updating timezone_data when the definition changes.
+
+          Calendar spec matching is based on literal matching of the clock time
+          with no special handling of DST: if you write a calendar spec that fires
+          at 2:30am and specify a time zone that follows DST, that action will not
+          be triggered on the day that has no 2:30am. Similarly, an action that
+          fires at 1:30am will be triggered twice on the day that has two 1:30s.
+
+          Also note that no actions are taken on leap-seconds (e.g. 23:59:60 UTC).
+      timezoneData:
+        type: string
+        format: byte
+    description: |-
+      ScheduleSpec is a complete description of a set of absolute timestamps
+      (possibly infinite) that an action should occur at. The meaning of a
+      ScheduleSpec depends only on its contents and never changes, except that the
+      definition of a time zone can change over time (most commonly, when daylight
+      saving time policy changes for an area). To create a totally self-contained
+      ScheduleSpec, use UTC or include timezone_data.
+
+      For input, you can provide zero or more of: structured_calendar, calendar,
+      cron_string, interval, and exclude_structured_calendar, and all of them will
+      be used (the schedule will take action at the union of all of their times,
+      minus the ones that match exclude_structured_calendar).
+
+      On input, calendar and cron_string fields will be compiled into
+      structured_calendar (and maybe interval and timezone_name), so if you
+      Describe a schedule, you'll see only structured_calendar, interval, etc.
+  scheduleScheduleState:
+    type: object
+    properties:
+      notes:
+        type: string
+        description: |-
+          Informative human-readable message with contextual notes, e.g. the reason
+          a schedule is paused. The system may overwrite this message on certain
+          conditions, e.g. when pause-on-failure happens.
+      paused:
+        type: boolean
+        description: If true, do not take any actions based on the schedule spec.
+      limitedActions:
+        type: boolean
+        description: |-
+          If limited_actions is true, decrement remaining_actions after each
+          action, and do not take any more scheduled actions if remaining_actions
+          is zero. Actions may still be taken by explicit request (i.e. trigger
+          immediately or backfill). Skipped actions (due to overlap policy) do not
+          count against remaining actions.
+      remainingActions:
+        type: string
+        format: int64
+  scheduleStructuredCalendarSpec:
+    type: object
+    properties:
+      second:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleRange'
+        title: Match seconds (0-59)
+      minute:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleRange'
+        title: Match minutes (0-59)
+      hour:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleRange'
+        title: Match hours (0-23)
+      dayOfMonth:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleRange'
+        title: |-
+          Match days of the month (1-31)
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: standard name of field --)
+      month:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleRange'
+        title: Match months (1-12)
+      year:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleRange'
+        description: Match years.
+      dayOfWeek:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleRange'
+        description: Match days of the week (0-6; 0 is Sunday).
+      comment:
+        type: string
+        description: Free-form comment describing the intention of this spec.
+    title: |-
+      StructuredCalendarSpec describes an event specification relative to the
+      calendar, in a form that's easy to work with programmatically. Each field can
+      be one or more ranges.
+      A timestamp matches if at least one range of each field matches the
+      corresponding fields of the timestamp, except for year: if year is missing,
+      that means all years match. For all fields besides year, at least one Range
+      must be present to match anything.
+      TODO: add relative-to-end-of-month
+      TODO: add nth day-of-week in month
+  scheduleTriggerImmediatelyRequest:
+    type: object
+    properties:
+      overlapPolicy:
+        $ref: '#/definitions/enumsScheduleOverlapPolicy'
+        description: Override overlap policy for this one request.
+  sdkWorkflowTaskCompletedMetadata:
+    type: object
+    properties:
+      coreUsedFlags:
+        type: array
+        items:
+          type: integer
+          format: int64
+        description: |-
+          During replay:
+          * If a flag is not recognized (value is too high or not defined), it must fail the workflow
+            task.
+          * If a flag is recognized, it is stored in a set of used flags for the run. Code checks for
+            that flag during and after this WFT are allowed to assume that the flag is present.
+          * If a code check for a flag does not find the flag in the set of used flags, it must take
+            the branch corresponding to the absence of that flag.
+
+          During non-replay execution of new WFTs:
+          * The SDK is free to use all flags it knows about. It must record any newly-used (IE: not
+            previously recorded) flags when completing the WFT.
+
+          SDKs which are too old to even know about this field at all are considered to produce
+          undefined behavior if they replay workflows which used this mechanism.
+
+          (-- api-linter: core::0141::forbidden-types=disabled
+              aip.dev/not-precedent: These really shouldn't have negative values. --)
+        title: 'Internal flags used by the core SDK. SDKs using flags must comply with the following behavior:'
+      langUsedFlags:
+        type: array
+        items:
+          type: integer
+          format: int64
+        description: |-
+          Flags used by the SDK lang. No attempt is made to distinguish between different SDK languages
+          here as processing a workflow with a different language than the one which authored it is
+          already undefined behavior. See `core_used_patches` for more.
+
+          (-- api-linter: core::0141::forbidden-types=disabled
+              aip.dev/not-precedent: These really shouldn't have negative values. --)
+  taskqueueBuildIdReachability:
+    type: object
+    properties:
+      buildId:
+        type: string
+        description: A build id or empty if unversioned.
+      taskQueueReachability:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/taskqueueTaskQueueReachability'
+        description: Reachability per task queue.
+    description: Reachability of tasks for a worker by build id, in one or more task queues.
+  taskqueueCompatibleVersionSet:
+    type: object
+    properties:
+      buildIds:
+        type: array
+        items:
+          type: string
+        description: All the compatible versions, unordered, except for the last element, which is considered the set "default".
+    description: |-
+      Used by the worker versioning APIs, represents an unordered set of one or more versions which are
+      considered to be compatible with each other. Currently the versions are always worker build IDs.
+  taskqueuePollerInfo:
+    type: object
+    properties:
+      lastAccessTime:
+        type: string
+        format: date-time
+      identity:
+        type: string
+      ratePerSecond:
+        type: number
+        format: double
+      workerVersionCapabilities:
+        $ref: '#/definitions/commonWorkerVersionCapabilities'
+        description: |-
+          If a worker has opted into the worker versioning feature while polling, its capabilities will
+          appear here.
+  taskqueueStickyExecutionAttributes:
+    type: object
+    properties:
+      workerTaskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      scheduleToStartTimeout:
+        type: string
+        title: |-
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+  taskqueueTaskIdBlock:
+    type: object
+    properties:
+      startId:
+        type: string
+        format: int64
+      endId:
+        type: string
+        format: int64
+  taskqueueTaskQueue:
+    type: object
+    properties:
+      name:
+        type: string
+      kind:
+        $ref: '#/definitions/enumsTaskQueueKind'
+        description: 'Default: TASK_QUEUE_KIND_NORMAL.'
+      normalName:
+        type: string
+        description: |-
+          Iff kind == TASK_QUEUE_KIND_STICKY, then this field contains the name of
+          the normal task queue that the sticky worker is running on.
+    title: See https://docs.temporal.io/docs/concepts/task-queues/
+  taskqueueTaskQueueMetadata:
+    type: object
+    properties:
+      maxTasksPerSecond:
+        type: number
+        format: double
+        title: Allows throttling dispatch of tasks from this queue
+    title: Only applies to activity task queues
+  taskqueueTaskQueuePartitionMetadata:
+    type: object
+    properties:
+      key:
+        type: string
+      ownerHostName:
+        type: string
+  taskqueueTaskQueueReachability:
+    type: object
+    properties:
+      taskQueue:
+        type: string
+      reachability:
+        type: array
+        items:
+          $ref: '#/definitions/enumsTaskReachability'
+        description: |-
+          Task reachability for a worker in a single task queue.
+          See the TaskReachability docstring for information about each enum variant.
+          If reachability is empty, this worker is considered unreachable in this task queue.
+    description: Reachability of tasks for a worker on a single task queue.
+  taskqueueTaskQueueStatus:
+    type: object
+    properties:
+      backlogCountHint:
+        type: string
+        format: int64
+      readLevel:
+        type: string
+        format: int64
+      ackLevel:
+        type: string
+        format: int64
+      ratePerSecond:
+        type: number
+        format: double
+      taskIdBlock:
+        $ref: '#/definitions/taskqueueTaskIdBlock'
+  updateInput:
+    type: object
+    properties:
+      header:
+        $ref: '#/definitions/commonHeader'
+        description: |-
+          Headers that are passed with the update from the requesting entity.
+          These can include things like auth or tracing tokens.
+      name:
+        type: string
+        title: The name of the input handler to invoke on the target workflow
+      args:
+        $ref: '#/definitions/commonPayloads'
+        description: The arguments to pass to the named handler.
+  updateMeta:
+    type: object
+    properties:
+      updateId:
+        type: string
+        title: An ID with workflow-scoped uniqueness for this update
+      identity:
+        type: string
+        description: A string identifying the agent that requested this update.
+    description: Metadata about a workflow execution update.
+  updateOutcome:
+    type: object
+    properties:
+      success:
+        $ref: '#/definitions/commonPayloads'
+      failure:
+        $ref: '#/definitions/failureFailure'
+    description: The outcome of a workflow update - success or failure.
+  updateRequest:
+    type: object
+    properties:
+      meta:
+        $ref: '#/definitions/updateMeta'
+      input:
+        $ref: '#/definitions/updateInput'
+    title: The client request that triggers a workflow execution update
+  updateUpdateRef:
+    type: object
+    properties:
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      updateId:
+        type: string
+    description: |-
+      The data needed by a client to refer to an previously invoked workflow
+      execution update process.
+  updateWaitPolicy:
+    type: object
+    properties:
+      lifecycleStage:
+        $ref: '#/definitions/enumsUpdateWorkflowExecutionLifecycleStage'
+        description: |-
+          Indicates the update lifecycle stage that the gRPC call should wait for
+          before returning.
+    description: |-
+      Specifies to the gRPC server how long the client wants the an update-related
+      RPC call to wait before returning control to the caller.
+  versionAlert:
+    type: object
+    properties:
+      message:
+        type: string
+      severity:
+        $ref: '#/definitions/enumsSeverity'
+    description: Alert contains notification and severity.
+  versionReleaseInfo:
+    type: object
+    properties:
+      version:
+        type: string
+      releaseTime:
+        type: string
+        format: date-time
+      notes:
+        type: string
+    description: ReleaseInfo contains information about specific version of temporal.
+  versionVersionInfo:
+    type: object
+    properties:
+      current:
+        $ref: '#/definitions/versionReleaseInfo'
+      recommended:
+        $ref: '#/definitions/versionReleaseInfo'
+      instructions:
+        type: string
+      alerts:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/versionAlert'
+      lastUpdateTime:
+        type: string
+        format: date-time
+    description: VersionInfo contains details about current and recommended release versions as well as alerts and upgrade instructions.
+  workflowNewWorkflowExecutionInfo:
+    type: object
+    properties:
+      workflowId:
+        type: string
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      input:
+        $ref: '#/definitions/commonPayloads'
+        description: Serialized arguments to the workflow.
+      workflowExecutionTimeout:
+        type: string
+        description: Total workflow execution timeout including retries and continue as new.
+      workflowRunTimeout:
+        type: string
+        description: Timeout of a single workflow run.
+      workflowTaskTimeout:
+        type: string
+        description: Timeout of a single workflow task.
+      workflowIdReusePolicy:
+        $ref: '#/definitions/enumsWorkflowIdReusePolicy'
+        description: 'Default: WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE.'
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+        description: The retry policy for the workflow. Will never exceed `workflow_execution_timeout`.
+      cronSchedule:
+        type: string
+        title: See https://docs.temporal.io/docs/content/what-is-a-temporal-cron-job/
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      header:
+        $ref: '#/definitions/commonHeader'
+    description: |-
+      NewWorkflowExecutionInfo is a shared message that encapsulates all the
+      required arguments to starting a workflow in different contexts.
+  workflowPendingActivityInfo:
+    type: object
+    properties:
+      activityId:
+        type: string
+      activityType:
+        $ref: '#/definitions/commonActivityType'
+      state:
+        $ref: '#/definitions/enumsPendingActivityState'
+      heartbeatDetails:
+        $ref: '#/definitions/commonPayloads'
+      lastHeartbeatTime:
+        type: string
+        format: date-time
+      lastStartedTime:
+        type: string
+        format: date-time
+      attempt:
+        type: integer
+        format: int32
+      maximumAttempts:
+        type: integer
+        format: int32
+      scheduledTime:
+        type: string
+        format: date-time
+      expirationTime:
+        type: string
+        format: date-time
+      lastFailure:
+        $ref: '#/definitions/failureFailure'
+      lastWorkerIdentity:
+        type: string
+  workflowPendingChildExecutionInfo:
+    type: object
+    properties:
+      workflowId:
+        type: string
+      runId:
+        type: string
+      workflowTypeName:
+        type: string
+      initiatedId:
+        type: string
+        format: int64
+      parentClosePolicy:
+        $ref: '#/definitions/enumsParentClosePolicy'
+        description: 'Default: PARENT_CLOSE_POLICY_TERMINATE.'
+  workflowPendingWorkflowTaskInfo:
+    type: object
+    properties:
+      state:
+        $ref: '#/definitions/enumsPendingWorkflowTaskState'
+      scheduledTime:
+        type: string
+        format: date-time
+      originalScheduledTime:
+        type: string
+        format: date-time
+        description: |-
+          original_scheduled_time is the scheduled time of the first workflow task during workflow task heartbeat.
+          Heartbeat workflow task is done by RespondWorkflowTaskComplete with ForceCreateNewWorkflowTask == true and no command
+          In this case, OriginalScheduledTime won't change. Then when current time - original_scheduled_time exceeds
+          some threshold, the workflow task will be forced timeout.
+      startedTime:
+        type: string
+        format: date-time
+      attempt:
+        type: integer
+        format: int32
+  workflowResetPointInfo:
+    type: object
+    properties:
+      binaryChecksum:
+        type: string
+        description: |-
+          A worker binary version identifier, will be deprecated and superseded by a newer concept of
+          build_id.
+      runId:
+        type: string
+        description: The first run ID in the execution chain that was touched by this worker build.
+      firstWorkflowTaskCompletedId:
+        type: string
+        format: int64
+        description: Event ID of the first WorkflowTaskCompleted event processed by this worker build.
+      createTime:
+        type: string
+        format: date-time
+      expireTime:
+        type: string
+        format: date-time
+        description: |-
+          (-- api-linter: core::0214::resource-expiry=disabled
+              aip.dev/not-precedent: TTL is not defined for ResetPointInfo. --)
+          The time that the run is deleted due to retention.
+      resettable:
+        type: boolean
+        description: false if the reset point has pending childWFs/reqCancels/signalExternals.
+  workflowResetPoints:
+    type: object
+    properties:
+      points:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowResetPointInfo'
+  workflowWorkflowExecutionConfig:
+    type: object
+    properties:
+      taskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+      workflowExecutionTimeout:
+        type: string
+      workflowRunTimeout:
+        type: string
+      defaultWorkflowTaskTimeout:
+        type: string
+  workflowWorkflowExecutionInfo:
+    type: object
+    properties:
+      execution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      type:
+        $ref: '#/definitions/commonWorkflowType'
+      startTime:
+        type: string
+        format: date-time
+      closeTime:
+        type: string
+        format: date-time
+      status:
+        $ref: '#/definitions/enumsWorkflowExecutionStatus'
+      historyLength:
+        type: string
+        format: int64
+      parentNamespaceId:
+        type: string
+      parentExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      executionTime:
+        type: string
+        format: date-time
+      memo:
+        $ref: '#/definitions/commonMemo'
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      autoResetPoints:
+        $ref: '#/definitions/workflowResetPoints'
+      taskQueue:
+        type: string
+      stateTransitionCount:
+        type: string
+        format: int64
+      historySizeBytes:
+        type: string
+        format: int64
+      mostRecentWorkerVersionStamp:
+        $ref: '#/definitions/commonWorkerVersionStamp'
+        title: If set, the most recent worker version stamp that appeared in a workflow task completion
+  workflowserviceCountWorkflowExecutionsResponse:
+    type: object
+    properties:
+      count:
+        type: string
+        format: int64
+  workflowserviceCreateScheduleResponse:
+    type: object
+    properties:
+      conflictToken:
+        type: string
+        format: byte
+  workflowserviceDeleteScheduleResponse:
+    type: object
+  workflowserviceDeleteWorkflowExecutionResponse:
+    type: object
+  workflowserviceDeprecateNamespaceResponse:
+    type: object
+    description: Deprecated.
+  workflowserviceDescribeBatchOperationResponse:
+    type: object
+    properties:
+      operationType:
+        $ref: '#/definitions/enumsBatchOperationType'
+        title: Batch operation type
+      jobId:
+        type: string
+        title: Batch job ID
+      state:
+        $ref: '#/definitions/enumsBatchOperationState'
+        title: Batch operation state
+      startTime:
+        type: string
+        format: date-time
+        title: Batch operation start time
+      closeTime:
+        type: string
+        format: date-time
+        title: Batch operation close time
+      totalOperationCount:
+        type: string
+        format: int64
+        title: Total operation count
+      completeOperationCount:
+        type: string
+        format: int64
+        title: Complete operation count
+      failureOperationCount:
+        type: string
+        format: int64
+        title: Failure operation count
+      identity:
+        type: string
+        title: Identity indicates the operator identity
+      reason:
+        type: string
+        title: Reason indicates the reason to stop a operation
+  workflowserviceDescribeNamespaceResponse:
+    type: object
+    properties:
+      namespaceInfo:
+        $ref: '#/definitions/namespaceNamespaceInfo'
+      config:
+        $ref: '#/definitions/namespaceNamespaceConfig'
+      replicationConfig:
+        $ref: '#/definitions/replicationNamespaceReplicationConfig'
+      failoverVersion:
+        type: string
+        format: int64
+      isGlobalNamespace:
+        type: boolean
+      failoverHistory:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/replicationFailoverStatus'
+        description: |-
+          Contains the historical state of failover_versions for the cluster, truncated to contain only the last N
+          states to ensure that the list does not grow unbounded.
+  workflowserviceDescribeScheduleResponse:
+    type: object
+    properties:
+      schedule:
+        $ref: '#/definitions/scheduleSchedule'
+        title: |-
+          The complete current schedule details. This may not match the schedule as
+          created because:
+          - some types of schedule specs may get compiled into others (e.g.
+            CronString into StructuredCalendarSpec)
+          - some unspecified fields may be replaced by defaults
+          - some fields in the state are modified automatically
+          - the schedule may have been modified by UpdateSchedule or PatchSchedule
+      info:
+        $ref: '#/definitions/scheduleScheduleInfo'
+        description: Extra schedule state info.
+      memo:
+        $ref: '#/definitions/commonMemo'
+        description: The memo and search attributes that the schedule was created with.
+      searchAttributes:
+        $ref: '#/definitions/commonSearchAttributes'
+      conflictToken:
+        type: string
+        format: byte
+        description: |-
+          This value can be passed back to UpdateSchedule to ensure that the
+          schedule was not modified between a Describe and an Update, which could
+          lead to lost updates and other confusion.
+  workflowserviceDescribeTaskQueueResponse:
+    type: object
+    properties:
+      pollers:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/taskqueuePollerInfo'
+      taskQueueStatus:
+        $ref: '#/definitions/taskqueueTaskQueueStatus'
+  workflowserviceDescribeWorkflowExecutionResponse:
+    type: object
+    properties:
+      executionConfig:
+        $ref: '#/definitions/workflowWorkflowExecutionConfig'
+      workflowExecutionInfo:
+        $ref: '#/definitions/workflowWorkflowExecutionInfo'
+      pendingActivities:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowPendingActivityInfo'
+      pendingChildren:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowPendingChildExecutionInfo'
+      pendingWorkflowTask:
+        $ref: '#/definitions/workflowPendingWorkflowTaskInfo'
+  workflowserviceGetClusterInfoResponse:
+    type: object
+    properties:
+      supportedClients:
+        type: object
+        additionalProperties:
+          type: string
+        description: |-
+          Key is client name i.e "temporal-go", "temporal-java", or "temporal-cli".
+          Value is ranges of supported versions of this client i.e ">1.1.1 <=1.4.0 || ^5.0.0".
+      serverVersion:
+        type: string
+      clusterId:
+        type: string
+      versionInfo:
+        $ref: '#/definitions/versionVersionInfo'
+      clusterName:
+        type: string
+      historyShardCount:
+        type: integer
+        format: int32
+      persistenceStore:
+        type: string
+      visibilityStore:
+        type: string
+    description: GetClusterInfoResponse contains information about Temporal cluster.
+  workflowserviceGetSearchAttributesResponse:
+    type: object
+    properties:
+      keys:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/enumsIndexedValueType'
+  workflowserviceGetSystemInfoResponse:
+    type: object
+    properties:
+      serverVersion:
+        type: string
+        description: Version of the server.
+      capabilities:
+        $ref: '#/definitions/GetSystemInfoResponseCapabilities'
+        description: All capabilities the system supports.
+  workflowserviceGetWorkerBuildIdCompatibilityResponse:
+    type: object
+    properties:
+      majorVersionSets:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/taskqueueCompatibleVersionSet'
+        description: |-
+          Major version sets, in order from oldest to newest. The last element of the list will always
+          be the current default major version. IE: New workflows will target the most recent version
+          in that version set.
+
+          There may be fewer sets returned than exist, if the request chose to limit this response.
+  workflowserviceGetWorkerTaskReachabilityResponse:
+    type: object
+    properties:
+      buildIdReachability:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/taskqueueBuildIdReachability'
+        description: |-
+          Task reachability, broken down by build id and then task queue.
+          When requesting a large number of task queues or all task queues associated with the given build ids in a
+          namespace, all task queues will be listed in the response but some of them may not contain reachability
+          information due to a server enforced limit. When reaching the limit, task queues that reachability information
+          could not be retrieved for will be marked with a single TASK_REACHABILITY_UNSPECIFIED entry. The caller may issue
+          another call to get the reachability for those task queues.
+
+          Open source users can adjust this limit by setting the server's dynamic config value for
+          `limit.reachabilityTaskQueueScan` with the caveat that this call can strain the visibility store.
+  workflowserviceGetWorkflowExecutionHistoryResponse:
+    type: object
+    properties:
+      history:
+        $ref: '#/definitions/historyHistory'
+      rawHistory:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/commonDataBlob'
+        description: |-
+          Raw history is an alternate representation of history that may be returned if configured on
+          the frontend. This is not supported by all SDKs. Either this or `history` will be set.
+      nextPageToken:
+        type: string
+        format: byte
+        title: Will be set if there are more history events than were included in this response
+      archived:
+        type: boolean
+  workflowserviceGetWorkflowExecutionHistoryReverseResponse:
+    type: object
+    properties:
+      history:
+        $ref: '#/definitions/historyHistory'
+      nextPageToken:
+        type: string
+        format: byte
+        title: Will be set if there are more history events than were included in this response
+  workflowserviceListArchivedWorkflowExecutionsResponse:
+    type: object
+    properties:
+      executions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowWorkflowExecutionInfo'
+      nextPageToken:
+        type: string
+        format: byte
+  workflowserviceListBatchOperationsResponse:
+    type: object
+    properties:
+      operationInfo:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/batchBatchOperationInfo'
+        title: BatchOperationInfo contains the basic info about batch operation
+      nextPageToken:
+        type: string
+        format: byte
+  workflowserviceListClosedWorkflowExecutionsResponse:
+    type: object
+    properties:
+      executions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowWorkflowExecutionInfo'
+      nextPageToken:
+        type: string
+        format: byte
+  workflowserviceListNamespacesResponse:
+    type: object
+    properties:
+      namespaces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowserviceDescribeNamespaceResponse'
+      nextPageToken:
+        type: string
+        format: byte
+  workflowserviceListOpenWorkflowExecutionsResponse:
+    type: object
+    properties:
+      executions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowWorkflowExecutionInfo'
+      nextPageToken:
+        type: string
+        format: byte
+  workflowserviceListScheduleMatchingTimesResponse:
+    type: object
+    properties:
+      startTime:
+        type: array
+        items:
+          type: string
+          format: date-time
+  workflowserviceListSchedulesResponse:
+    type: object
+    properties:
+      schedules:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scheduleScheduleListEntry'
+      nextPageToken:
+        type: string
+        format: byte
+  workflowserviceListTaskQueuePartitionsResponse:
+    type: object
+    properties:
+      activityTaskQueuePartitions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/taskqueueTaskQueuePartitionMetadata'
+      workflowTaskQueuePartitions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/taskqueueTaskQueuePartitionMetadata'
+  workflowserviceListWorkflowExecutionsResponse:
+    type: object
+    properties:
+      executions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowWorkflowExecutionInfo'
+      nextPageToken:
+        type: string
+        format: byte
+  workflowservicePatchScheduleResponse:
+    type: object
+  workflowservicePollActivityTaskQueueResponse:
+    type: object
+    properties:
+      taskToken:
+        type: string
+        format: byte
+        title: A unique identifier for this task
+      workflowNamespace:
+        type: string
+        title: The namespace the workflow which requested this activity lives in
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+        title: Type of the requesting workflow
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+        title: Execution info of the requesting workflow
+      activityType:
+        $ref: '#/definitions/commonActivityType'
+      activityId:
+        type: string
+        description: |-
+          The autogenerated or user specified identifier of this activity. Can be used to complete the
+          activity via `RespondActivityTaskCompletedById`. May be re-used as long as the last usage
+          has resolved, but unique IDs for every activity invocation is a good idea.
+      header:
+        $ref: '#/definitions/commonHeader'
+        description: |-
+          Headers specified by the scheduling workflow. Commonly used to propagate contextual info
+          from the workflow to its activities. For example, tracing contexts.
+      input:
+        $ref: '#/definitions/commonPayloads'
+        title: Arguments to the activity invocation
+      heartbeatDetails:
+        $ref: '#/definitions/commonPayloads'
+        description: |-
+          Details of the last heartbeat that was recorded for this activity as of the time this task
+          was delivered.
+      scheduledTime:
+        type: string
+        format: date-time
+        title: When was this task first scheduled
+      currentAttemptScheduledTime:
+        type: string
+        format: date-time
+        title: When was this task attempt scheduled
+      startedTime:
+        type: string
+        format: date-time
+        title: When was this task started (this attempt)
+      attempt:
+        type: integer
+        format: int32
+        title: Starting at 1, the number of attempts to perform this activity
+      scheduleToCloseTimeout:
+        type: string
+        description: |-
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+        title: First scheduled -> final result reported timeout
+      startToCloseTimeout:
+        type: string
+        description: |-
+          (-- api-linter: core::0140::prepositions=disabled
+              aip.dev/not-precedent: "to" is used to indicate interval. --)
+        title: Current attempt start -> final result reported timeout
+      heartbeatTimeout:
+        type: string
+        description: Window within which the activity must report a heartbeat, or be timed out.
+      retryPolicy:
+        $ref: '#/definitions/commonRetryPolicy'
+        description: |-
+          This is the retry policy the service uses which may be different from the one provided
+          (or not) during activity scheduling. The service can override the provided one if some
+          values are not specified or exceed configured system limits.
+  workflowservicePollWorkflowExecutionUpdateResponse:
+    type: object
+    properties:
+      outcome:
+        $ref: '#/definitions/updateOutcome'
+        description: |-
+          The outcome of the update if and only if the update has completed. If
+          this response is being returned before the update has completed (e.g. due
+          to the specification of a wait policy that only waits on
+          UPDATE_WORKFLOW_EXECUTION_LIFECYCLE_STAGE_ACCEPTED) then this field will
+          not be set.
+  workflowservicePollWorkflowTaskQueueResponse:
+    type: object
+    properties:
+      taskToken:
+        type: string
+        format: byte
+        title: A unique identifier for this task
+      workflowExecution:
+        $ref: '#/definitions/commonWorkflowExecution'
+      workflowType:
+        $ref: '#/definitions/commonWorkflowType'
+      previousStartedEventId:
+        type: string
+        format: int64
+        description: |-
+          The last workflow task started event which was processed by some worker for this execution.
+          Will be zero if no task has ever started.
+      startedEventId:
+        type: string
+        format: int64
+        description: |-
+          The id of the most recent workflow task started event, which will have been generated as a
+          result of this poll request being served.
+      attempt:
+        type: integer
+        format: int32
+        description: Starting at 1, the number of attempts to complete this task by any worker.
+      backlogCountHint:
+        type: string
+        format: int64
+        description: |-
+          A hint that there are more tasks already present in this task queue. Can be used to
+          prioritize draining a sticky queue before polling from a normal queue.
+      history:
+        $ref: '#/definitions/historyHistory'
+        description: |-
+          The history for this workflow, which will either be complete or partial. Partial histories
+          are sent to workers who have signaled that they are using a sticky queue when completing
+          a workflow task.
+      nextPageToken:
+        type: string
+        format: byte
+        description: |-
+          Will be set if there are more history events than were included in this response. Such events
+          should be fetched via `GetWorkflowExecutionHistory`.
+      query:
+        $ref: '#/definitions/queryWorkflowQuery'
+        description: |-
+          Legacy queries appear in this field. The query must be responded to via
+          `RespondQueryTaskCompleted`. If the workflow is already closed (queries are permitted on
+          closed workflows) then the `history` field will be populated with the entire history. It
+          may also be populated if this task originates on a non-sticky queue.
+      workflowExecutionTaskQueue:
+        $ref: '#/definitions/taskqueueTaskQueue'
+        description: |-
+          The task queue this task originated from, which will always be the original non-sticky name
+          for the queue, even if this response came from polling a sticky queue.
+      scheduledTime:
+        type: string
+        format: date-time
+        title: When this task was scheduled by the server
+      startedTime:
+        type: string
+        format: date-time
+        description: When the current workflow task started event was generated, meaning the current attempt.
+      queries:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/queryWorkflowQuery'
+        title: |-
+          Queries that should be executed after applying the history in this task. Responses should be
+          attached to `RespondWorkflowTaskCompletedRequest::query_results`
+      messages:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protocolMessage'
+        title: Protocol messages piggybacking on a WFT as a transport
+  workflowserviceQueryWorkflowResponse:
+    type: object
+    properties:
+      queryResult:
+        $ref: '#/definitions/commonPayloads'
+      queryRejected:
+        $ref: '#/definitions/queryQueryRejected'
+  workflowserviceRecordActivityTaskHeartbeatByIdResponse:
+    type: object
+    properties:
+      cancelRequested:
+        type: boolean
+        description: |-
+          Will be set to true if the activity has been asked to cancel itself. The SDK should then
+          notify the activity of cancellation if it is still running.
+  workflowserviceRecordActivityTaskHeartbeatResponse:
+    type: object
+    properties:
+      cancelRequested:
+        type: boolean
+        description: |-
+          Will be set to true if the activity has been asked to cancel itself. The SDK should then
+          notify the activity of cancellation if it is still running.
+  workflowserviceRegisterNamespaceResponse:
+    type: object
+  workflowserviceRequestCancelWorkflowExecutionResponse:
+    type: object
+  workflowserviceResetStickyTaskQueueResponse:
+    type: object
+  workflowserviceResetWorkflowExecutionResponse:
+    type: object
+    properties:
+      runId:
+        type: string
+  workflowserviceRespondActivityTaskCanceledByIdResponse:
+    type: object
+  workflowserviceRespondActivityTaskCanceledResponse:
+    type: object
+  workflowserviceRespondActivityTaskCompletedByIdResponse:
+    type: object
+  workflowserviceRespondActivityTaskCompletedResponse:
+    type: object
+  workflowserviceRespondActivityTaskFailedByIdResponse:
+    type: object
+    properties:
+      failures:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/failureFailure'
+        title: |-
+          Server validation failures could include
+          last_heartbeat_details payload is too large, request failure is too large
+  workflowserviceRespondActivityTaskFailedResponse:
+    type: object
+    properties:
+      failures:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/failureFailure'
+        title: |-
+          Server validation failures could include
+          last_heartbeat_details payload is too large, request failure is too large
+  workflowserviceRespondQueryTaskCompletedResponse:
+    type: object
+  workflowserviceRespondWorkflowTaskCompletedResponse:
+    type: object
+    properties:
+      workflowTask:
+        $ref: '#/definitions/workflowservicePollWorkflowTaskQueueResponse'
+        title: See `RespondWorkflowTaskCompletedResponse::return_new_workflow_task`
+      activityTasks:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowservicePollActivityTaskQueueResponse'
+        title: See `ScheduleActivityTaskCommandAttributes::request_start`
+      resetHistoryEventId:
+        type: string
+        format: int64
+  workflowserviceRespondWorkflowTaskFailedResponse:
+    type: object
+  workflowserviceScanWorkflowExecutionsResponse:
+    type: object
+    properties:
+      executions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/workflowWorkflowExecutionInfo'
+      nextPageToken:
+        type: string
+        format: byte
+  workflowserviceSignalWithStartWorkflowExecutionResponse:
+    type: object
+    properties:
+      runId:
+        type: string
+  workflowserviceSignalWorkflowExecutionResponse:
+    type: object
+  workflowserviceStartBatchOperationResponse:
+    type: object
+  workflowserviceStartWorkflowExecutionResponse:
+    type: object
+    properties:
+      runId:
+        type: string
+      eagerWorkflowTask:
+        $ref: '#/definitions/workflowservicePollWorkflowTaskQueueResponse'
+        description: |-
+          When `request_eager_execution` is set on the `StartWorkflowExecutionRequest`, the server - if supported - will
+          return the first workflow task to be eagerly executed.
+          The caller is expected to have a worker available to process the task.
+  workflowserviceStopBatchOperationResponse:
+    type: object
+  workflowserviceTerminateWorkflowExecutionResponse:
+    type: object
+  workflowserviceUpdateNamespaceResponse:
+    type: object
+    properties:
+      namespaceInfo:
+        $ref: '#/definitions/namespaceNamespaceInfo'
+      config:
+        $ref: '#/definitions/namespaceNamespaceConfig'
+      replicationConfig:
+        $ref: '#/definitions/replicationNamespaceReplicationConfig'
+      failoverVersion:
+        type: string
+        format: int64
+      isGlobalNamespace:
+        type: boolean
+  workflowserviceUpdateScheduleResponse:
+    type: object
+  workflowserviceUpdateWorkerBuildIdCompatibilityResponse:
+    type: object
+  workflowserviceUpdateWorkflowExecutionResponse:
+    type: object
+    properties:
+      updateRef:
+        $ref: '#/definitions/updateUpdateRef'
+        description: Enough information for subsequent poll calls if needed. Never null.
+      outcome:
+        $ref: '#/definitions/updateOutcome'
+        description: |-
+          The outcome of the update if and only if the workflow execution update
+          has completed. If this response is being returned before the update has
+          completed then this field will not be set.

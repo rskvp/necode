@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package necode.namespace;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+import "necode/gogoproto/gogo.proto";
+
+import "necode/enums/namespace.proto";
+
+message NamespaceInfo {
+    string name = 1;
+    necode.enums.NamespaceState state = 2;
+    string description = 3;
+    string owner_email = 4;
+    // A key-value map for any customized purpose.
+    map<string, string> data = 5;
+    string id = 6;
+
+    // Whether scheduled workflows are supported on this namespace. This is only needed
+    // temporarily while the feature is experimental, so we can give it a high tag.
+    bool supports_schedules = 100;
+}
+
+message NamespaceConfig {
+    google.protobuf.Duration workflow_execution_retention_ttl = 1 [(gogoproto.stdduration) = true];
+    BadBinaries bad_binaries = 2;
+    // If unspecified (ARCHIVAL_STATE_UNSPECIFIED) then default server configuration is used.
+    necode.enums.ArchivalState history_archival_state = 3;
+    string history_archival_uri = 4;
+    // If unspecified (ARCHIVAL_STATE_UNSPECIFIED) then default server configuration is used.
+    necode.enums.ArchivalState visibility_archival_state = 5;
+    string visibility_archival_uri = 6;
+    // Map from field name to alias.
+    map<string, string> custom_search_attribute_aliases = 7;
+}
+
+message BadBinaries {
+    map<string, BadBinaryInfo> binaries = 1;
+}
+
+message BadBinaryInfo {
+    string reason = 1;
+    string operator = 2;
+    google.protobuf.Timestamp create_time = 3 [(gogoproto.stdtime) = true];
+}
+
+message UpdateNamespaceInfo {
+    string description = 1;
+    string owner_email = 2;
+    // A key-value map for any customized purpose.
+    // If data already exists on the namespace, 
+    // this will merge with the existing key values. 
+    map<string, string> data = 3;
+    // New namespace state, server will reject if transition is not allowed.
+    // Allowed transitions are:
+    //  Registered -> [ Deleted | Deprecated | Handover ]
+    //  Handover -> [ Registered ]
+    // Default is NAMESPACE_STATE_UNSPECIFIED which is do not change state.
+    necode.enums.NamespaceState state = 4;
+}
+
+message NamespaceFilter {
+    // By default namespaces in NAMESPACE_STATE_DELETED state are not included.
+    // Setting include_deleted to true will include deleted namespaces.
+    // Note: Namespace is in NAMESPACE_STATE_DELETED state when it was deleted from the system but associated data is not deleted yet.
+    bool include_deleted = 1;
+}

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package necode.query;
+
+import "necode/enums/query.proto";
+import "necode/enums/workflow.proto";
+import "necode/common/message.proto";
+
+// See https://docs.temporal.io/docs/concepts/queries/
+message WorkflowQuery {
+    // The workflow-author-defined identifier of the query. Typically a function name.
+    string query_type = 1;
+    // Serialized arguments that will be provided to the query handler.
+    necode.common.Payloads query_args = 2;
+    // Headers that were passed by the caller of the query and copied by temporal 
+    // server into the workflow task.
+    necode.common.Header header = 3;
+}
+
+// Answer to a `WorkflowQuery`
+message WorkflowQueryResult {
+    // Did the query succeed or fail?
+    necode.enums.QueryResultType result_type = 1;
+    // Set when the query succeeds with the results
+    necode.common.Payloads answer = 2;
+    // Mutually exclusive with `answer`. Set when the query fails.
+    string error_message = 3;
+}
+
+message QueryRejected {
+    necode.enums.WorkflowExecutionStatus status = 1;
+}

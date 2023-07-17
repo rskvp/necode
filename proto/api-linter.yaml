@@ -50,7 +50,7 @@
     - 'core::0191::java-multiple-files=disabled'
 
 - included_paths:
-    - 'dependencies/github.com/gogo/protobuf/gogoproto/gogo.proto'
+    - 'gogoproto/v1/gogo.proto'
     - 'dependencies/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2/options/annotations.proto'
     - 'dependencies/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2/options/openapiv2.proto'
     - 'dependencies/github.com/gogo/googleapis/google/rpc/status.proto'
