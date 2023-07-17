@@ -1,0 +1,308 @@
+syntax = "proto3";
+
+package necode.sharing.ocm;
+
+option csharp_namespace = "necode.Sharing.Ocm";
+option go_package = "ocm";
+option java_multiple_files = true;
+option java_outer_classname = "ResourcesProto";
+option java_package = "com.necode.sharing.ocm";
+option objc_class_prefix = "CSO";
+option php_namespace = "Cs3\\Sharing\\Ocm\\";
+
+import "necode/app/provider/resources.proto";
+import "necode/identity/user/resources.proto";
+import "necode/storage/provider/resources.proto";
+import "necode/types/types.proto";
+
+// Shares are relationships between a resource owner
+// (usually the authenticated user) who grants permissions to a recipient
+// (grantee) on a specified resource (resource_id). UserShares represents both
+// user and groups.
+message Share {
+  // REQUIRED.
+  // Opaque unique identifier of the share.
+  ShareId id = 1;
+  // REQUIRED.
+  // Unique identifier of the shared resource.
+  storage.provider.ResourceId resource_id = 2;
+  // REQUIRED.
+  // Name of the shared resource.
+  string name = 3;
+  // REQUIRED.
+  // The unlisted token to give access to the ocm share.
+  string token = 4;
+  // REQUIRED.
+  // The receiver of the share, like a user, group ...
+  storage.provider.Grantee grantee = 5;
+  // REQUIRED.
+  // Uniquely identifies the owner of the share
+  // (the resource owner at the time of creating the share).
+  // In case the ownership of the underlying resource changes
+  // the share owner field MAY change to reflect the change of ownsership.
+  necode.identity.user.UserId owner = 6;
+  // REQUIRED.
+  // Uniquely identifies a principal who initiates the share creation.
+  // A creator can create shares on behalf of the owner (because of re-sharing,
+  // because belonging to special groups, ...).
+  // Creator and owner often result in being the same principal.
+  necode.identity.user.UserId creator = 7;
+  // REQUIRED.
+  // Creation time of the share.
+  necode.types.Timestamp ctime = 8;
+  // REQUIRED.
+  // Last modification time of the share.
+  necode.types.Timestamp mtime = 9;
+  // OPTIONAL.
+  // The expiration time for the OCM share.
+  necode.types.Timestamp expiration = 10;
+  // REQUIRED.
+  // Recipient share type.
+  necode.sharing.ocm.ShareType share_type = 11;
+  // REQUIRED.
+  repeated AccessMethod access_methods = 12;
+  // OPTIONAL.
+  necode.types.Opaque opaque = 13;
+}
+
+// The permissions for a share.
+message SharePermissions {
+  storage.provider.ResourcePermissions permissions = 1;
+  bool reshare = 2;
+}
+
+// A received share is the share that a grantee will receive.
+message ReceivedShare {
+  // REQUIRED.
+  // Opaque unique identifier of the share.
+  ShareId id = 1;
+  // REQUIRED.
+  // Name of the shared resource.
+  string name = 2;
+  // REQUIRED.
+  // Identifier to identify the shared resource at the provider side.
+  // This is unique per provider such that if the same resource is shared twice, this will not be repeated.
+  // This correspond to the `providerId` in the OCM API specs.
+  string remote_share_id = 3;
+  // REQUIRED.
+  // The receiver of the share, like a user, group ...
+  storage.provider.Grantee grantee = 4;
+  // REQUIRED.
+  // Uniquely identifies the owner of the share
+  // (the resource owner at the time of creating the share).
+  // In case the ownership of the underlying resource changes
+  // the share owner field MAY change to reflect the change of ownsership.
+  necode.identity.user.UserId owner = 5;
+  // REQUIRED.
+  // Uniquely identifies a principal who initiates the share creation.
+  // A creator can create shares on behalf of the owner (because of re-sharing,
+  // because belonging to special groups, ...).
+  // Creator and owner often result in being the same principal.
+  necode.identity.user.UserId creator = 6;
+  // REQUIRED.
+  // Creation time of the share.
+  necode.types.Timestamp ctime = 7;
+  // REQUIRED.
+  // Last modification time of the share.
+  necode.types.Timestamp mtime = 8;
+  // OPTIONAL.
+  // The expiration time for the ocm share.
+  necode.types.Timestamp expiration = 9;
+  // REQUIRED.
+  // Recipient share type.
+  necode.sharing.ocm.ShareType share_type = 10;
+  // REQUIRED.
+  // List of protocols offered for this share.
+  // In the OCM specifications, this corresponds to the `protocol`
+  // property, to maintain backwards compatibility with OCM v1 where
+  // only a single protocol was implemented. Furthermore,
+  // `protocol.name` MAY be set to `multi` and `protocol.options`
+  // MAY be left empty in the OCM share payload, in order to use
+  // the `protocol.webdav` and similar properties.
+  repeated Protocol protocols = 11;
+  // REQUIRED.
+  // The state of the share.
+  ShareState state = 12;
+  // OPTIONAL.
+  necode.types.Opaque opaque = 13;
+  // REQUIRED.
+  // Resource type.
+  necode.storage.provider.ResourceType resource_type = 14;
+}
+
+// The state of the share.
+enum ShareState {
+  // The share is no longer valid, for example, the share expired.
+  SHARE_STATE_INVALID = 0;
+  // New shares MUST be created in the SHARE_STATE_PENDING state.
+  // This state means the share is pending to be accepted or rejected
+  // by the recipient of the share.
+  SHARE_STATE_PENDING = 1;
+  // The recipient of the share has accepted the share.
+  SHARE_STATE_ACCEPTED = 2;
+  // The recipient of the share has rejected the share.
+  // Do not means the share is removed, the recipient MAY
+  // change the state to accepted or pending.
+  SHARE_STATE_REJECTED = 3;
+}
+
+// Uniquely identifies a share in the share provider.
+// A share MUST be uniquely identify by four (4) elements:
+// 1) The share provider id
+// 2) The owner of the share
+// 3) The resource id
+// 4) The grantee for the share
+// This 4-tuple MUST be unique.
+// For example, owner Alice shares the resource /home/docs with id
+// home:1234 to an user named Bob. The 4-tuple will consist of
+// 1) The share provider id = "user"
+// 2) The owner of the share = "Alice"
+// 3) The resource id = "home:1234"
+// 4) The grantee for the share = Grantee("type" = "user", "" => "Bob")
+message ShareKey {
+  // REQUIRED.
+  necode.identity.user.UserId owner = 1;
+  // REQUIRED.
+  storage.provider.ResourceId resource_id = 2;
+  // REQUIRED.
+  storage.provider.Grantee grantee = 3;
+}
+
+// A share id identifies uniquely a share in the share provider namespace.
+// A ShareId MUST be unique inside the share provider.
+message ShareId {
+  // REQUIRED.
+  // The internal id used by service implementor to
+  // uniquely identify the share in the internal
+  // implementation of the service.
+  // In the OCM specifications, this corresponds to the `providerId`.
+  string opaque_id = 1;
+}
+
+// The mechanism to identify a share
+// in the share provider namespace.
+message ShareReference {
+  // REQUIRED.
+  // One of the specifications MUST be specified.
+  oneof spec {
+    // The id of the share.
+    ShareId id = 1;
+    // The combination of fields that
+    // make the share unique.
+    ShareKey key = 2;
+    // The token of the share.
+    string token = 3;
+  }
+}
+
+// A share grant specifies the share permissions
+// for a grantee.
+message ShareGrant {
+  // REQUIRED.
+  // The grantee of the grant.
+  storage.provider.Grantee grantee = 1;
+  // REQUIRED.
+  // The share permissions for the grant.
+  SharePermissions permissions = 2;
+}
+
+// The protocol which is used to give access to a remote OCM user.
+message Protocol {
+  // REQUIRED.
+  // One of the protocols MUST be specified.
+  oneof term {
+    // Options for WebDAV protocol.
+    WebDAVProtocol webdav_options = 1;
+    // Options for Webapp protocol.
+    WebappProtocol webapp_options = 2;
+    // Options for transfer protocol.
+    TransferProtocol transfer_options = 3;
+    // Options for a generic protocol.
+    // Used to implement future protocols
+    // in the OCM specs.
+    necode.types.Opaque generic_options = 4;
+  }
+}
+
+// Defines the options for the WebDAV protocol.
+message WebDAVProtocol {
+  // REQUIRED.
+  // Secret used to access the resource.
+  string shared_secret = 1;
+  // REQUIRED.
+  // Permissions of the shared resource.
+  necode.sharing.ocm.SharePermissions permissions = 2;
+  // REQUIRED.
+  // WebDAV URI used to access the resource.
+  string uri = 3;
+}
+
+// Defines the options for the Webapp protocol.
+message WebappProtocol {
+  // REQUIRED.
+  // Template URI to open the resource with a remote app.
+  string uri_template = 1;
+  // REQUIRED.
+  // View mode for the remote app.
+  necode.app.provider.ViewMode view_mode = 2;
+}
+
+// Defines the options for the Transfer protocol.
+message TransferProtocol {
+  // REQUIRED.
+  // Secret used to access the source of the data transfer.
+  string shared_secret = 1;
+  // REQUIRED.
+  // Source URI for the data transfer.
+  string source_uri = 2;
+  // REQUIRED.
+  // Size in bytes of the source.
+  uint64 size = 3;
+}
+
+// Defines the type of share based on its recipient.
+enum ShareType {
+  SHARE_TYPE_INVALID = 0;
+  // Share of type user.
+  SHARE_TYPE_USER = 1;
+  // Share of type group.
+  SHARE_TYPE_GROUP = 2;
+}
+
+// Defines how the recipient accesses an incoming remote OCM share.
+message AccessMethod {
+  // REQUIRED.
+  // One of the access method MUST be specified.
+  oneof term {
+    // Options for the WebDAV access method.
+    WebDAVAccessMethod webdav_options = 1;
+    // Options for the Webapp access method.
+    WebappAccessMethod webapp_options = 2;
+    // Options for the Transfer access method.
+    TransferAccessMethod transfer_options = 3;
+    // Options for a generic transfer method.
+    // Used to implement future access methods.
+    necode.types.Opaque generic_options = 4;
+  }
+}
+
+// Defines the options for the WebDAV access method.
+message WebDAVAccessMethod {
+  // REQUIRED.
+  // The permissions for the share.
+  storage.provider.ResourcePermissions permissions = 1;
+}
+
+// Defines the options for the Webapp access method.
+message WebappAccessMethod {
+  // REQUIRED.
+  // The view mode for the share.
+  necode.app.provider.ViewMode view_mode = 1;
+}
+
+// Defines the options for the Transfer access method.
+message TransferAccessMethod {
+  // REQUIRED.
+  // The destination path of the data transfer.
+  storage.provider.Reference destination = 1;
+}

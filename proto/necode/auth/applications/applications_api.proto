@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package necode.auth.applications;
+
+import "necode/auth/applications/resources.proto";
+import "necode/auth/provider/resources.proto";
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/types/types.proto";
+
+// Auth Applications API
+//
+// The Auth Applications API is meant to generate and manage authentication
+// tokens with specified scopes to be used in third-party applications on behalf
+// of the user.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service ApplicationsAPI {
+  // GenerateAppPassword creates a password with specified scope to be used by
+  // third-party applications.
+  rpc GenerateAppPassword(GenerateAppPasswordRequest) returns (GenerateAppPasswordResponse);
+  // ListAppPasswords lists the application passwords created by a user.
+  rpc ListAppPasswords(ListAppPasswordsRequest) returns (ListAppPasswordsResponse);
+  // InvalidateAppPassword invalidates a generated password.
+  rpc InvalidateAppPassword(InvalidateAppPasswordRequest) returns (InvalidateAppPasswordResponse);
+  // GetAppPassword retrieves the password information by the combination of username and password.
+  rpc GetAppPassword(GetAppPasswordRequest) returns (GetAppPasswordResponse);
+}
+
+message GenerateAppPasswordRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // OPTIONAL.
+  // The scope of the token to be issued.
+  // This would be a list of resources with corresponding role-based access scope.
+  map<string, necode.auth.provider.Scope> token_scope = 2;
+  // OPTIONAL.
+  // A label to be associated with the password.
+  string label = 3;
+  // OPTIONAL.
+  // The time when the token will expire.
+  necode.types.Timestamp expiration = 4;
+}
+
+message GenerateAppPasswordResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The generated access password.
+  AppPassword app_password = 3;
+}
+
+message ListAppPasswordsRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+}
+
+message ListAppPasswordsResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The generated access password.
+  repeated AppPassword app_passwords = 3;
+}
+
+message InvalidateAppPasswordRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The password which has to be invalidated.
+  string password = 2;
+}
+
+message InvalidateAppPasswordResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message GetAppPasswordRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The user who created the app password.
+  necode.identity.user.UserId user = 2;
+  // REQUIRED.
+  // The password which has to be retrieved.
+  string password = 3;
+}
+
+message GetAppPasswordResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The generated access password.
+  AppPassword app_password = 3;
+}

@@ -1,0 +1,160 @@
+syntax = "proto3";
+
+package necode.identity.group;
+
+
+import "necode/identity/group/resources.proto";
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/types/types.proto";
+
+// GroupProvider API.
+//
+// The GroupProvider API is responsible for providing methods to retrieve
+// information about groups and their interactions with users.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a successful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+
+// Provides an API for managing groups.
+service GroupAPI {
+  // Gets the information about a group by the group id.
+  rpc GetGroup(GetGroupRequest) returns (GetGroupResponse);
+  // Gets the information about a group based on a specified claim.
+  rpc GetGroupByClaim(GetGroupByClaimRequest) returns (GetGroupByClaimResponse);
+  // Gets the members of a group.
+  rpc GetMembers(GetMembersRequest) returns (GetMembersResponse);
+  // Tells if the group has certain member.
+  rpc HasMember(HasMemberRequest) returns (HasMemberResponse);
+  // Finds groups whose names match the specified filter.
+  rpc FindGroups(FindGroupsRequest) returns (FindGroupsResponse);
+}
+
+message GetGroupRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The id of the group.
+  necode.identity.group.GroupId group_id = 2;
+  // OPTIONAL.
+  // Whether to skip fetching members along with the group object.
+  bool skip_fetching_members = 3;
+}
+
+message GetGroupResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The group information.
+  Group group = 3;
+}
+
+message GetGroupByClaimRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The claim on the basis of which groups will be filtered.
+  string claim = 2;
+  // REQUIRED.
+  // The value of the claim to find the specific group.
+  string value = 3;
+  // OPTIONAL.
+  // Whether to skip fetching members along with the group object.
+  bool skip_fetching_members = 4;
+}
+
+message GetGroupByClaimResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The group information.
+  Group group = 3;
+}
+
+message GetMembersRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The id of the group.
+  necode.identity.group.GroupId group_id = 2;
+}
+
+message GetMembersResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The members of the group.
+  repeated necode.identity.user.UserId members = 3;
+}
+
+message HasMemberRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The id of the group.
+  necode.identity.group.GroupId group_id = 2;
+  // REQUIRED.
+  // The id of the user to check.
+  necode.identity.user.UserId user_id = 3;
+}
+
+message HasMemberResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // Tells if the user belongs to the group.
+  bool ok = 3;
+}
+
+message FindGroupsRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The filter to apply.
+  string filter = 2;
+  // OPTIONAL.
+  // Whether to skip fetching members along with the group object.
+  bool skip_fetching_members = 3;
+}
+
+message FindGroupsResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The groups matching the specified filter.
+  repeated Group groups = 3;
+}

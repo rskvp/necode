@@ -1,0 +1,76 @@
+
+
+syntax = "proto3";
+
+package necode.auth.registry;
+
+import "necode/auth/registry/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/types/types.proto";
+
+// Auth Registry API
+//
+// The Auth Registry API is meant to as registry to obtain
+// information of available auth providers.
+// For example, to use OIDC or Kerberos for authentication.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service RegistryAPI {
+  // Returns the auth provider that is reponsible for the given
+  // resource reference.
+  // MUST return CODE_NOT_FOUND if the reference does not exist.
+  rpc GetAuthProviders(GetAuthProvidersRequest) returns (GetAuthProvidersResponse);
+  // Returns a list of the available auth providers known by this registry.
+  rpc ListAuthProviders(ListAuthProvidersRequest) returns (ListAuthProvidersResponse);
+}
+
+message GetAuthProvidersRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The type of authentication provider.
+  string type = 2;
+}
+
+message GetAuthProvidersResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The auth providers handling the requested auth call.
+  repeated ProviderInfo providers = 3;
+}
+
+message ListAuthProvidersRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // TODO(labkode): maybe add some filter?
+
+}
+
+message ListAuthProvidersResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The list of auth providers this registry knows about.
+  repeated ProviderInfo providers = 3;
+}

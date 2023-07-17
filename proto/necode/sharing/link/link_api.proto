@@ -1,0 +1,278 @@
+syntax = "proto3";
+
+package necode.sharing.link;
+
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/sharing/link/resources.proto";
+import "necode/storage/provider/resources.proto";
+import "necode/types/types.proto";
+
+// PublicShare Provider API
+//
+// The Public Share Provider API is meant to manipulate public shares
+// also called public links.
+//
+// Access to public shares can be limitted by a password. The share
+// provider must store this password in a secure manner e.g. hashed
+// with the bcrypt algorithm.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service LinkAPI {
+  // Creates a new share.
+  // MUST return CODE_NOT_FOUND if the resource reference does not exist.
+  // MUST return CODE_ALREADY_EXISTS if the share already exists for the 4-tuple consisting of
+  // (owner, shared_resource, grantee).
+  // New shares MUST be created in the state SHARE_STATE_PENDING.
+  rpc CreatePublicShare(CreatePublicShareRequest) returns (CreatePublicShareResponse);
+  // Removes a share.
+  // MUST return CODE_NOT_FOUND if the share reference does not exist.
+  rpc RemovePublicShare(RemovePublicShareRequest) returns (RemovePublicShareResponse);
+  // Gets share information for a single share.
+  // MUST return CODE_NOT_FOUND if the share reference does not exist.
+  rpc GetPublicShare(GetPublicShareRequest) returns (GetPublicShareResponse);
+  // Gets share information for a single share by its unlisted token.
+  // MUST return CODE_NOT_FOUND if the share does not exist.
+  rpc GetPublicShareByToken(GetPublicShareByTokenRequest) returns (GetPublicShareByTokenResponse);
+  // List the shares the authenticated principal has created,
+  // both as owner and creator. If a filter is specified, only
+  // shares satisfying the filter MUST be returned.
+  rpc ListPublicShares(ListPublicSharesRequest) returns (ListPublicSharesResponse);
+  // Updates a share.
+  // MUST return CODE_NOT_FOUND if the share reference does not exist.
+  rpc UpdatePublicShare(UpdatePublicShareRequest) returns (UpdatePublicShareResponse);
+}
+
+message CreatePublicShareRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The unique identifier for the shared storage resource.
+  storage.provider.ResourceInfo resource_info = 2;
+  // REQUIRED.
+  // The restrictions to apply to the share.
+  Grant grant = 3;
+  // OPTIONAL
+  // The description to add to the share.
+  string description = 4;
+  // OPTIONAL
+  // Indicates a share used for internal usage,
+  // not exposed by a ListPublicShares.
+  bool internal = 5;
+  // OPTIONAL
+  // Whether to notify the owner of a share when a file is uploaded to it.
+  bool notify_uploads = 6;
+  // OPTIONAL
+  // Comma-separated list of extra email addresses to notify when a file is
+  // uploaded to the share.
+  string notify_uploads_extra_recipients = 7;
+}
+
+message CreatePublicShareResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The created share.
+  PublicShare share = 3;
+}
+
+message UpdatePublicShareRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+
+  // REQUIRED.
+  // The reference to the public share.
+  PublicShareReference ref = 2;
+  // Available fields to update.
+
+  // REQUIRED.
+  message Update {
+    // REQUIRED.
+    enum Type {
+      TYPE_INVALID = 0;
+      TYPE_PERMISSIONS = 1;
+      TYPE_PASSWORD = 2;
+      TYPE_EXPIRATION = 3;
+      TYPE_DISPLAYNAME = 4;
+      TYPE_DESCRIPTION = 5;
+      TYPE_NOTIFYUPLOADS = 6;
+      TYPE_NOTIFYUPLOADSEXTRARECIPIENTS = 7;
+    }
+    // REQUIRED.
+    // Defines the field to update.
+    Type type = 3;
+    // REQUIRED.
+    // Contains the field that will be updated.
+    Grant grant = 4;
+    // OPTIONAL
+    // Defines the public link display name.
+    string display_name = 5;
+    // OPTIONAL
+    // Defines the public link description.
+    string description = 6;
+    // OPTIONAL
+    // Whether to notify the owner of a share when a file is uploaded to it.
+    bool notify_uploads = 7;
+    // OPTIONAL
+    // Comma-separated list of extra email addresses to notify when a file is
+    // uploaded to the share.
+    string notify_uploads_extra_recipients = 8;
+  }
+  Update update = 3;
+}
+
+message UpdatePublicShareResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The updated public share.
+  PublicShare share = 3;
+}
+
+message ListPublicSharesRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // represents a filter to apply to the request.
+  message Filter {
+    // REQUIRED.
+    enum Type {
+      TYPE_INVALID = 0;
+      TYPE_RESOURCE_ID = 1;
+      TYPE_OWNER = 2;
+      TYPE_CREATOR = 3;
+    }
+    Type type = 2;
+    oneof term {
+      storage.provider.ResourceId resource_id = 3;
+      necode.identity.user.UserId owner = 4;
+      necode.identity.user.UserId creator = 5;
+    }
+  }
+  // OPTIONAL.
+  // The list of filters to apply if any.
+  repeated Filter filters = 2;
+  // OPTIONAL.
+  // If a signature should be included in the share.
+  bool sign = 3;
+  // OPTIONAL.
+  // Clients use this field to specify the maximum number of results to be returned by the server.
+  // The server may further constrain the maximum number of results returned in a single page.
+  // If the page_size is 0, the server will decide the number of results to be returned.
+  // see https://cloud.google.com/apis/design/design_patterns#list_pagination
+  int32 page_size = 4;
+  // OPTIONAL.
+  // The client uses this field to request a specific page of the list results.
+  string page_token = 5;
+}
+
+message ListPublicSharesResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The list of shares.
+  repeated PublicShare share = 3;
+  // OPTIONAL.
+  // This field represents the pagination token to retrieve the next page of results.
+  // If the value is "", it means no further results for the request.
+  // see https://cloud.google.com/apis/design/design_patterns#list_pagination
+  string next_page_token = 4;
+}
+
+message RemovePublicShareRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The reference to which the action should be performed.
+  PublicShareReference ref = 2;
+}
+
+message RemovePublicShareResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message GetPublicShareRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The reference to which the action should be performed.
+  PublicShareReference ref = 2;
+  // OPTIONAL.
+  // If a signature should be included in the share.
+  bool sign = 3;
+}
+
+message GetPublicShareResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The share.
+  PublicShare share = 3;
+}
+
+message GetPublicShareByTokenRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The unlisted token to identify the public share.
+  string token = 2;
+  // OPTIONAL.
+  // The public link can require authentication.
+  PublicShareAuthentication authentication = 3;
+  // OPTIONAL.
+  // If a signature should be included in the share.
+  bool sign = 4;
+}
+
+message GetPublicShareByTokenResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The share.
+  PublicShare share = 3;
+  // OPTIONAL.
+  // The share password hash.
+  string password_hash = 4 [deprecated = true];
+}

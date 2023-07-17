@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package necode.auth.registry;
+
+import "necode/types/types.proto";
+
+// ProviderInfo provides the information about an authentication provider.
+message ProviderInfo {
+  // OPTIONAL.
+  // Opaque information (containing storage-specific information).
+  // For example, additional metadata attached to the resource.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The storage provider id that will become part of the
+  // resource id.
+  // For example, if the provider_id is "home", resources obtained
+  // from this storage provider will have a resource id like "home:1234".
+  string provider_type = 2;
+  // REQUIRED.
+  // The address where the storage provider can be reached.
+  // For example, tcp://localhost:1099.
+  string address = 4;
+  // OPTIONAL.
+  // Information to describe the functionalities
+  // offered by the storage provider. Meant to be read
+  // by humans.
+  string description = 5;
+}

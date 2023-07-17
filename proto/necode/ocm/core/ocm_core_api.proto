@@ -1,0 +1,144 @@
+syntax = "proto3";
+
+package necode.ocm.core;
+
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/sharing/ocm/resources.proto";
+import "necode/storage/provider/resources.proto";
+import "necode/types/types.proto";
+
+// OCM Core API
+//
+// the OCM Core API is the mapping for the local system of the OCM protocol,
+// including multi-protocol shares. Implementations are expected to expose
+// the `/ocm` endpoints according to the OCM API, and in response to those
+// endpoints implement the following API.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service OcmCoreAPI {
+  // Creates a new OCM share, in response to a call from remote to:
+  // https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1shares/post
+  rpc CreateOCMCoreShare(CreateOCMCoreShareRequest) returns (CreateOCMCoreShareResponse);
+  // Updates an OCM share, in response to a notification from the remote system to:
+  // https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1notifications/post
+  rpc UpdateOCMCoreShare(UpdateOCMCoreShareRequest) returns (UpdateOCMCoreShareResponse);
+  // Deletes an OCM share, in response to a notification from the remote system to:
+  // https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1notifications/post
+  rpc DeleteOCMCoreShare(DeleteOCMCoreShareRequest) returns (DeleteOCMCoreShareResponse);
+}
+
+message CreateOCMCoreShareRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // OPTIONAL.
+  // Description for the share.
+  string description = 2;
+  // REQUIRED.
+  // Name of the resource (file or folder).
+  string name = 3;
+  // REQUIRED.
+  // Identifier to identify the resource at the provider side. This is unique per provider.
+  string resource_id = 4;
+  // REQUIRED.
+  // Provider specific identifier of the owner of the resource.
+  necode.identity.user.UserId owner = 5;
+  // REQUIRED.
+  // Provider specific identifier of the user that wants to share the resource.
+  necode.identity.user.UserId sender = 6;
+  // REQUIRED.
+  // Consumer specific identifier of the user or group the provider wants to share the resource with.
+  // This is known in advance, for example using the OCM invitation flow.
+  // Please note that the consumer service endpoint is known in advance as well, so this is no part of the request body.
+  // TODO: this field needs to represent either a user or group in the future, not only a user.
+  necode.identity.user.UserId share_with = 7;
+  // REQUIRED.
+  // Resource type.
+  necode.storage.provider.ResourceType resource_type = 8;
+  // REQUIRED.
+  // Recipient share type.
+  necode.sharing.ocm.ShareType share_type = 9;
+  // OPTIONAL.
+  // The expiration time for the OCM share.
+  necode.types.Timestamp expiration = 10;
+  // REQUIRED.
+  // The protocols which are used to establish synchronisation,
+  // with their access rights.
+  // See also necode/sharing/ocm/resources.proto for how to map
+  // this to the OCM share payload.
+  repeated necode.sharing.ocm.Protocol protocols = 11;
+}
+
+message CreateOCMCoreShareResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // Unique ID to identify the share at the consumer side.
+  string id = 3;
+  // REQUIRED.
+  necode.types.Timestamp created = 4;
+}
+
+message UpdateOCMCoreShareRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // Unique ID to identify the share at the consumer side.
+  string ocm_share_id = 2;
+  // OPTIONAL.
+  // Description for the share.
+  string description = 3;
+  // OPTIONAL.
+  // Recipient share type.
+  necode.sharing.ocm.ShareType share_type = 5;
+  // OPTIONAL.
+  // The expiration time for the OCM share.
+  necode.types.Timestamp expiration = 6;
+  // OPTIONAL.
+  // The protocols which are used to establish synchronisation,
+  // with their access rights.
+  repeated necode.sharing.ocm.Protocol protocols = 7;
+}
+
+message UpdateOCMCoreShareResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message DeleteOCMCoreShareRequest {
+  // REQUIRED.
+  // Unique ID to identify the share at the consumer side.
+  string id = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message DeleteOCMCoreShareResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}

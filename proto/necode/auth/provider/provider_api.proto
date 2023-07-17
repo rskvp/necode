@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package necode.auth.provider;
+
+
+import "necode/auth/provider/resources.proto";
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/types/types.proto";
+
+// Auth Provider API
+//
+// The Auth Provider API is meant to authenticate a client.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service ProviderAPI {
+  // Authenticate authenticates a client.
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+}
+
+message AuthenticateRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // OPTIONAL.
+  // The id of the client.
+  // For basic authentication with username and password
+  // both client_id and client_secret are expected to be filled.
+  // However, for example, for OIDC only a token is necessary.
+  string client_id = 2;
+  // OPTIONAL.
+  // The secret of the client.
+  string client_secret = 3;
+}
+
+message AuthenticateResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // REQUIRED.
+  // The authenticated user.
+  necode.identity.user.User user = 2;
+  // REQUIRED.
+  // The scope of the token to be issued.
+  // This would be a list of resources with corresponding role-based access scope.
+  map<string, Scope> token_scope = 3;
+}

@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package necode.tx;
+
+import "necode/rpc/status.proto";
+import "necode/sharing/ocm/resources.proto";
+import "necode/tx/resources.proto";
+import "necode/types/types.proto";
+
+// Tx API
+//
+// The Tx API provides data transfer capabilities.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service TxAPI {
+  // Requests creation of a transfer.
+  // Returns a CreateTransferResponse.
+  rpc CreateTransfer(CreateTransferRequest) returns (CreateTransferResponse);
+  // Requests a transfer status.
+  rpc GetTransferStatus(GetTransferStatusRequest) returns (GetTransferStatusResponse);
+  // Requests to cancel a transfer.
+  rpc CancelTransfer(CancelTransferRequest) returns (CancelTransferResponse);
+  // Requests a list of transfers received by the authenticated principle.
+  // If a filter is specified, only transfers satisfying the filter MUST be returned.
+  rpc ListTransfers(ListTransfersRequest) returns (ListTransfersResponse);
+  // Requests retrying a transfer.
+  rpc RetryTransfer(RetryTransferRequest) returns (RetryTransferResponse);
+}
+
+message CreateTransferRequest {
+  // REQUIRED.
+  // The source target URI. Should include at the minimum all the info needed to access the source.
+  // https://golang.org/pkg/net/url/#URL provides a quick view of the format.
+  string src_target_uri = 1;
+  // REQUIRED.
+  // The destination target URI. Should include at the minimum all the info needed to access the destination.
+  // https://golang.org/pkg/net/url/#URL provides a quick view of the format.
+  string dest_target_uri = 2;
+  // REQUIRED.
+  // The share Id of the share this transfer is based on.
+  necode.sharing.ocm.ShareId share_id = 3;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 4;
+}
+
+message CreateTransferResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // REQUIRED.
+  // TxInfo, includes transfer id, status, description.
+  TxInfo tx_info = 2;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 3;
+}
+
+message GetTransferStatusRequest {
+  // REQUIRED.
+  // The transfer identifier.
+  TxId tx_id = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message GetTransferStatusResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // REQUIRED.
+  // TxInfo, includes ao. transfer id, status, description.
+  TxInfo tx_info = 2;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 3;
+}
+
+message CancelTransferRequest {
+  // REQUIRED.
+  // The transfer identifier.
+  TxId tx_id = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message CancelTransferResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // REQUIRED.
+  // TxInfo, includes ao. transfer id, status, description.
+  TxInfo tx_info = 2;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 3;
+}
+
+message ListTransfersRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // Represents a filter to apply to the request.
+  message Filter {
+    // The filter type.
+    enum Type {
+      TYPE_INVALID = 0;
+      TYPE_STATUS = 1;
+      TYPE_SHARE_ID = 2;
+      TYPE_TX_ID = 3;
+    }
+    // REQUIRED.
+    Type type = 1;
+    // REQUIRED.
+    oneof term {
+      Status status = 2;
+      necode.sharing.ocm.ShareId share_id = 3;
+      TxId tx_id = 4;
+    }
+  }
+  // OPTIONAL.
+  // The list of filters to apply if any.
+  repeated Filter filters = 2;
+}
+
+message ListTransfersResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // REQUIRED.
+  // List of TxInfo types representing transfers.
+  repeated TxInfo transfers = 2;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 3;
+}
+
+message RetryTransferRequest {
+  // REQUIRED.
+  // The transfer identifier.
+  TxId tx_id = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message RetryTransferResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // REQUIRED.
+  // TxInfo, includes ao. transfer id, status, description.
+  TxInfo tx_info = 2;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 3;
+}

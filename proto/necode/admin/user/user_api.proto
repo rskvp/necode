@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package necode.admin.user;
+
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/types/types.proto";
+
+// Provides a write only API for managing users.
+service UserAPI {
+  // Create a user account.
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  // Delete a user account.
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+message CreateUserRequest {
+  // OPTIONAL.
+  // Opaque information. Allow to send any arbitrary data a service might use that is outside the API boundaries
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The information of user to be created.
+  necode.identity.user.User user = 2;
+}
+
+message CreateUserResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The user information.
+  necode.identity.user.User user = 3;
+}
+
+message DeleteUserRequest {
+  // OPTIONAL.
+  // Opaque information. Allow to send any arbitrary data a service might use that is outside the API boundaries
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The user to be deleted, given their ID.
+  necode.identity.user.UserId user_id = 2;
+}
+
+message DeleteUserResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}

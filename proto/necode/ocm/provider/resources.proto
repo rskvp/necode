@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package necode.ocm.provider;
+
+//  Identifier for various types of services offered by sync'n'share system providers.
+message ServiceType {
+  // REQUIRED
+  // The name of the service type.
+  string name = 1;
+  // REQUIRED
+  // The description of the service type.
+  string description = 2;
+}
+
+// The endpoints exposed by particular services.
+message ServiceEndpoint {
+  // REQUIRED.
+  // The type of service.
+  ServiceType type = 1;
+  // REQUIRED.
+  // The name of the service.
+  string name = 2;
+  // REQUIRED.
+  // The path at which the service is hosted.
+  string path = 3;
+  // OPTIONAL.
+  // Whether the service is monitored.
+  bool is_monitored = 4;
+  // OPTIONAL.
+  // Additional properties about the service.
+  map<string, string> properties = 5;
+}
+
+// The services offered by sync'n'share system providers.
+message Service {
+  // REQUIRED.
+  // The URL at which the service is hosted.
+  string host = 1;
+  // REQUIRED.
+  // The primary endpoint of the service.
+  ServiceEndpoint endpoint = 2;
+  // REQUIRED.
+  // The API version of the provided service.
+  string api_version = 3;
+  // OPTIONAL.
+  // Additional endpoints at which the service is exposed.
+  repeated ServiceEndpoint additional_endpoints = 4;
+}
+
+// Details of the sync'n'share system provider.
+message ProviderInfo {
+  // REQUIRED.
+  // The name of the provider.
+  string name = 1;
+  // REQUIRED.
+  // The full name of the provider.
+  string full_name = 2;
+  // REQUIRED.
+  // A description of the provider.
+  string description = 3;
+  // REQUIRED.
+  // The organization to which the provider belongs.
+  string organization = 4;
+  // REQUIRED.
+  // The domain of the sync'n'share provider.
+  string domain = 5;
+  // REQUIRED.
+  // The homepage of the provider.
+  string homepage = 6;
+  // REQUIRED.
+  // The email at which the provider can be reached.
+  string email = 7;
+  // REQUIRED.
+  // The list of services provided by the provider.
+  repeated Service services = 8;
+  // OPTIONAL.
+  // Additional properties about the service.
+  map<string, string> properties = 9;
+}

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package necode.gateway;
+
+import "necode/storage/provider/resources.proto";
+import "necode/types/types.proto";
+
+// A file upload protocol object stores information about
+// uploading resources using a specific protocol.
+message FileUploadProtocol {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The protocol to be followed.
+  string protocol = 2;
+  // REQUIRED.
+  // The endpoint where to upload the data.
+  // The value MUST be a Uniform Resource Identifier (URI)
+  // as specified in RFC 3986.
+  string upload_endpoint = 3;
+  // REQUIRED.
+  // List of available checksums
+  // the client can use when sending
+  // the file.
+  repeated necode.storage.provider.ResourceChecksumPriority available_checksums = 4;
+  // OPTIONAL.
+  // A token that MUST be validated by the data gateway for the upload.
+  // Only makes sense for uploads passing through the data gateway.
+  string token = 5;
+}
+
+// A file download protocol object stores information about
+// downloading resources using a specific protocol.
+message FileDownloadProtocol {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The protocol to be followed.
+  string protocol = 2;
+  // REQUIRED.
+  // The endpoint where to download the data.
+  // The value MUST be a Uniform Resource Identifier (URI)
+  // as specified in RFC 3986.
+  string download_endpoint = 3;
+  // OPTIONAL.
+  // A token that MUST be validated by the data gateway for the download.
+  // Only makes sense for downloads passing through the data gateway.
+  string token = 4;
+}

@@ -1,0 +1,98 @@
+
+syntax = "proto3";
+
+package necode.storage.registry;
+
+import "necode/rpc/status.proto";
+import "necode/storage/provider/resources.proto";
+import "necode/storage/registry/resources.proto";
+import "necode/types/types.proto";
+
+// Storage Registry API
+//
+// The Storage Registry API is meant to as registry to obtain
+// information of available storage providers.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service RegistryAPI {
+  // Returns the storage provider that is reponsible for the given
+  // resource reference.
+  // MUST return CODE_NOT_FOUND if the reference does not exist.
+  rpc GetStorageProviders(GetStorageProvidersRequest) returns (GetStorageProvidersResponse);
+  // Returns a list of the available storage providers known by this registry.
+  rpc ListStorageProviders(ListStorageProvidersRequest) returns (ListStorageProvidersResponse);
+  // Gets the user home storage provider.
+  rpc GetHome(GetHomeRequest) returns (GetHomeResponse);
+  // TODO(labkode): missing methods for adding and removing a storage provider
+  // with different visibility levels (system-wide, user-wide, group-wide)...
+
+}
+
+message GetHomeRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+}
+
+message GetHomeResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The storage provider for the user home.
+  necode.storage.registry.ProviderInfo provider = 3;
+}
+
+message GetStorageProvidersRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The reference for the resource.
+  necode.storage.provider.Reference ref = 2;
+}
+
+message GetStorageProvidersResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The storage providers handling the requested storage resource.
+  repeated necode.storage.registry.ProviderInfo providers = 3;
+}
+
+message ListStorageProvidersRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // TODO(labkode): maybe add some filter?
+
+}
+
+message ListStorageProvidersResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The list of storage providers this registry knows about.
+  repeated necode.storage.registry.ProviderInfo providers = 3;
+}

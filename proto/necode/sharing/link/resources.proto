@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package necode.sharing.link;
+
+import "necode/identity/user/resources.proto";
+import "necode/storage/provider/resources.proto";
+import "necode/types/types.proto";
+
+//
+//message PublicShare {
+//  string id = 1;
+//  string token = 2;
+//  string filename = 3;
+//  FileType file_type = 4;
+//  uint64 expiration = 5;
+//  bool password_protected = 6;
+//  Permission permission = 7;
+//  string display_name = 8;
+//  string owner = 9;
+//}
+//
+
+// Public share are relationships between a resource owner
+// (usually the authenticated user) who grants permissions to a recipient (grantee)
+// on a specified resource (resource_id). UserShares represents both user and groups.
+// TODO(labkode): do we need to have  resource_type stored on the share?
+// This is not needed if when getting the shares a stat operation is launched against the
+// the storage provider.
+message PublicShare {
+  // REQUIRED.
+  // Opaque unique identifier of the share.
+  PublicShareId id = 1;
+  // REQUIRED.
+  // The unlisted token to give public access
+  // to the public share.
+  string token = 2;
+  // REQUIRED.
+  // Unique identifier of the shared resource.
+  storage.provider.ResourceId resource_id = 3;
+  // REQUIRED.
+  // Permissions for the grantee to use
+  // the resource.
+  PublicSharePermissions permissions = 4;
+  // REQUIRED.
+  // Uniquely identifies the owner of the share
+  // (the resource owner at the time of creating the share).
+  // In case the ownership of the underlying resource changes
+  // the share owner field MAY change to reflect the change of ownsership.
+  necode.identity.user.UserId owner = 5;
+  // REQUIRED.
+  // Uniquely identifies a principal who initiates the share creation.
+  // A creator can create shares on behalf of the owner (because of re-sharing,
+  // because belonging to special groups, ...).
+  // Creator and owner often result in being the same principal.
+  necode.identity.user.UserId creator = 6;
+  // REQUIRED.
+  // Creation time of the share.
+  necode.types.Timestamp ctime = 7;
+  // REQUIRED.
+  // Last modification time of the share.
+  necode.types.Timestamp mtime = 8;
+  // REQUIRED.
+  // Determines if the public share is password protected or not.
+  bool password_protected = 9;
+  // OPTIONAL.
+  // The expiration time for the public share.
+  necode.types.Timestamp expiration = 10;
+  // OPTIONAL.
+  // Display name for the shared resource (such as file, directory basename or any
+  // user defined name).
+  // The display name MAY be different than the actual resource basename.
+  // This field is only useful for informational purposes, like for example,
+  // setting the window title in a public share HTML page.
+  string display_name = 11;
+  // OPTIONAL.
+  // A time constrained token with which
+  // GetPublicSharebyToken requests can be
+  // authenticated.
+  ShareSignature signature = 12;
+  // OPTIONAL
+  // A bool value indicating if the link is the quicklink
+  // the server will enforce a maximum of 1 quicklink per resource
+  bool quicklink = 13;
+  // OPTIONAL
+  // Description of the share.
+  string description = 14;
+  // OPTIONAL
+  // Whether to notify the owner of a share when a file is uploaded to it.
+  bool notify_uploads = 15;
+  // OPTIONAL
+  // Comma-separated list of extra email addresses to notify when a file is
+  // uploaded to the share.
+  string notify_uploads_extra_recipients = 16;
+}
+
+// The permissions for a share.
+message PublicSharePermissions {
+  storage.provider.ResourcePermissions permissions = 1;
+  // TODO(labkode): additional permissions for shares like re-sharing
+
+}
+
+// A share id identifies uniquely a // share in the share provider namespace.
+// A ShareId MUST be unique inside the share provider.
+message PublicShareId {
+  // REQUIRED.
+  // The internal id used by service implementor to
+  // uniquely identity the share in the internal
+  // implementation of the service.
+  string opaque_id = 2;
+}
+
+// The mechanism to identify a share
+// in the share provider namespace.
+message PublicShareReference {
+  // REQUIRED.
+  // One of the specifications MUST be specified.
+  oneof spec {
+    // The id of the share.
+    PublicShareId id = 1;
+    // The token to identify the public share.
+    string token = 2;
+  }
+}
+
+// The mechanism to authenticate a request to
+// GetPublicShareByToken.
+message PublicShareAuthentication {
+  oneof spec {
+    // The password of the share.
+    string password = 1;
+    // The signature issued by GetPublicShareByToken.
+    ShareSignature signature = 2;
+  }
+}
+
+// A time constrained token which can be used to
+// authenticate link share requests.
+message ShareSignature {
+  // REQUIRED.
+  // The signature value.
+  string signature = 1;
+  // REQUIRED.
+  // The time until the signature becomes invalid.
+  necode.types.Timestamp signature_expiration = 2;
+}
+
+// Defines the restrictions for the public share.
+message Grant {
+  // REQUIRED.
+  // The permissions for the share.
+  PublicSharePermissions permissions = 1;
+  // OPTIONAL.
+  // A password to protect the access to the public share.
+  string password = 2;
+  // OPTIONAL.
+  // An expiration date to protect the access to the public share.
+  necode.types.Timestamp expiration = 3;
+}

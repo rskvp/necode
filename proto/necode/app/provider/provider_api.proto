@@ -1,0 +1,69 @@
+
+syntax = "proto3";
+
+package necode.app.provider;
+
+import "necode/app/provider/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/storage/provider/resources.proto";
+import "necode/types/types.proto";
+
+//import "necode/appprovider/resources.proto";
+
+// App Provider API
+//
+// The App Provider API is responsible for creating URLs that
+// will render a viewer or editor for the given resource, typically via WOPI protocol.
+// For example, a Collabora or HackMD editor.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a succesful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+service ProviderAPI {
+  // Returns the App URL and all necessary info to open a resource in an online editor.
+  // MUST return CODE_NOT_FOUND if the resource does not exist.
+  rpc OpenInApp(OpenInAppRequest) returns (OpenInAppResponse);
+}
+
+message OpenInAppRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The resourceInfo to be opened. The gateway grpc message has a ref instead.
+  storage.provider.ResourceInfo resource_info = 2;
+  // REQUIRED.
+  // View mode.
+  ViewMode view_mode = 3;
+  // REQUIRED.
+  // The access token this application provider will use when contacting
+  // the storage provider to read and write.
+  // Service implementors MUST make sure that the access token only grants
+  // access to the requested resource.
+  // Service implementors should use a ResourceId rather than a filepath to grant access, as
+  // ResourceIds MUST NOT change when a resource is renamed.
+  // The access token MUST be short-lived.
+  // TODO(labkode): investigate token derivation techniques.
+  string access_token = 4;
+}
+
+message OpenInAppResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The url that user agents will render to clients.
+  // Usually the rendering happens by using HTML iframes or in separate browser tabs.
+  OpenInAppURL app_url = 3;
+}

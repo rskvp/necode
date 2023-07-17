@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package necode.identity.user;
+
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/types/types.proto";
+
+// UserProvider API.
+//
+// The UserProvider API is responsible for providing
+// methods to retrieve information about the users.
+//
+// The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+// NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+// "OPTIONAL" in this document are to be interpreted as described in
+// RFC 2119.
+//
+// The following are global requirements that apply to all methods:
+// Any method MUST return CODE_OK on a successful operation.
+// Any method MAY return NOT_IMPLEMENTED.
+// Any method MAY return INTERNAL.
+// Any method MAY return UNKNOWN.
+// Any method MAY return UNAUTHENTICATED.
+
+// Provides an API for managing users.
+service UserAPI {
+  // Gets the information about a user by the user id.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  // Gets the information about a user based on a specified claim.
+  rpc GetUserByClaim(GetUserByClaimRequest) returns (GetUserByClaimResponse);
+  // Gets the groups of a user.
+  rpc GetUserGroups(GetUserGroupsRequest) returns (GetUserGroupsResponse);
+  // Finds users by any attribute of the user.
+  // TODO(labkode): to define the filters that make more sense.
+  rpc FindUsers(FindUsersRequest) returns (FindUsersResponse);
+}
+
+message GetUserRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The id of the user.
+  necode.identity.user.UserId user_id = 2;
+  // OPTIONAL.
+  // Whether to skip fetching user groups along with the user object.
+  bool skip_fetching_user_groups = 3;
+}
+
+message GetUserResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The user information.
+  User user = 3;
+}
+
+message GetUserByClaimRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The claim on the basis of which users will be filtered.
+  string claim = 2;
+  // REQUIRED.
+  // The value of the claim to find the specific user.
+  string value = 3;
+  // OPTIONAL.
+  // Whether to skip fetching user groups along with the user object.
+  bool skip_fetching_user_groups = 4;
+}
+
+message GetUserByClaimResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The user information.
+  User user = 3;
+}
+
+message GetUserGroupsRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The id of the user.
+  necode.identity.user.UserId user_id = 2;
+}
+
+message GetUserGroupsResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The groups for the user.
+  repeated string groups = 3;
+}
+
+message FindUsersRequest {
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED. TODO(labkode): create proper filters for most common searches.
+  // The filter to apply.
+  string filter = 2;
+  // OPTIONAL.
+  // Whether to skip fetching user groups along with the user object.
+  bool skip_fetching_user_groups = 3;
+}
+
+message FindUsersResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The users matching the specified filter.
+  repeated User users = 3;
+}

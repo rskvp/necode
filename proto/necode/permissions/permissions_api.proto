@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package necode.permissions;
+
+import "necode/permissions/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/storage/provider/resources.proto";
+
+// PermissionsAPI defines a service for permissions.
+service PermissionsAPI {
+  // CheckPermission defines a method to check permission/role.
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+}
+
+// CheckPermissionsRequest is used to check if a user has a certain permission.
+message CheckPermissionRequest {
+  //REQUIRED.
+  // The permission to check.
+  string permission = 1;
+  // REQUIRED.
+  // The subject holding the permission.
+  necode.permissions.SubjectReference subject_ref = 2;
+  // OPTIONAL.
+  // The target resource of the permission.
+  necode.storage.provider.Reference ref = 3;
+}
+
+// CheckPermissionsResponse ...
+message CheckPermissionResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+}

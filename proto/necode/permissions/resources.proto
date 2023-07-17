@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package necode.permissions;
+
+import "necode/identity/group/resources.proto";
+import "necode/identity/user/resources.proto";
+
+// SubjectReference references either a user or a group by id.
+message SubjectReference {
+  oneof spec {
+    necode.identity.user.UserId user_id = 1;
+    necode.identity.group.GroupId group_id = 2;
+  }
+}

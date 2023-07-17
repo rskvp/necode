@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package necode.ocm.invite;
+
+option csharp_namespace = "necode.Ocm.Invite";
+option go_package = "invite";
+option java_multiple_files = true;
+option java_outer_classname = "ResourcesProto";
+option java_package = "com.necode.ocm.invite";
+option objc_class_prefix = "COI";
+option php_namespace = "Cs3\\Ocm\\Invite\\";
+
+import "necode/identity/user/resources.proto";
+import "necode/types/types.proto";
+
+// InviteToken is used to invite users and groups from other sync'n'share
+// systems to collaborate on resources.
+message InviteToken {
+  // REQUIRED.
+  // Unique ID associated with an InviteToken.
+  string token = 1;
+  // REQUIRED.
+  // The user who created the token.
+  necode.identity.user.UserId user_id = 2;
+  // OPTIONAL.
+  // The time when the token will expire.
+  necode.types.Timestamp expiration = 3;
+  // OPTIONAL.
+  // User-defined description to be forwarded to the invitees.
+  string description = 4;
+}

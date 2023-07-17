@@ -1,0 +1,14 @@
+
+syntax = "proto3";
+
+package necode.preferences;
+
+
+// Represents a key object consisting of a namespace and a string key.
+message PreferenceKey {
+  // REQUIRED.
+  // The namespace to which the key belongs.
+  string namespace = 1;
+  // REQUIRED.
+  string key = 2;
+}

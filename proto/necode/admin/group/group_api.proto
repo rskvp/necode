@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package necode.admin.group;
+
+import "necode/identity/group/resources.proto";
+import "necode/identity/user/resources.proto";
+import "necode/rpc/status.proto";
+import "necode/types/types.proto";
+
+// Provides a write only API for managing groups.
+service GroupAPI {
+  // Create a group.
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
+  // Delete a group.
+  rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse);
+  // Add a user to a group.
+  rpc AddUserToGroup(AddUserToGroupRequest) returns (AddUserToGroupResponse);
+  // Remove a user from a group.
+  rpc RemoveUserFromGroup(RemoveUserFromGroupRequest) returns (RemoveUserFromGroupResponse);
+}
+
+message CreateGroupRequest {
+  // OPTIONAL.
+  // Opaque information. Allow to send any arbitrary data a service might use that is outside the API boundaries
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The information of group to be created.
+  necode.identity.group.Group group = 2;
+}
+
+message CreateGroupResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+  // REQUIRED.
+  // The group information.
+  necode.identity.group.Group group = 3;
+}
+
+message DeleteGroupRequest {
+  // OPTIONAL.
+  // Opaque information. Allow to send any arbitrary data a service might use that is outside the API boundaries.
+  necode.types.Opaque opaque = 1;
+  // REQUIRED.
+  // The group to be deleted, given their ID.
+  necode.identity.group.GroupId group_id = 2;
+}
+
+message DeleteGroupResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message AddUserToGroupRequest {
+  // REQUIRED.
+  // ID of the user to add to the group
+  necode.identity.user.UserId user_id = 1;
+  // REQUIRED.
+  // ID of the target group.
+  necode.identity.group.GroupId group_id = 2;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 3;
+}
+
+message AddUserToGroupResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
+
+message RemoveUserFromGroupRequest {
+  // REQUIRED.
+  // ID of the user to add to the group
+  necode.identity.user.UserId user_id = 1;
+  // REQUIRED.
+  // ID of the target group.
+  necode.identity.group.GroupId group_id = 2;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 3;
+}
+
+message RemoveUserFromGroupResponse {
+  // REQUIRED.
+  // The response status.
+  necode.rpc.Status status = 1;
+  // OPTIONAL.
+  // Opaque information.
+  necode.types.Opaque opaque = 2;
+}
