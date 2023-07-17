@@ -1,3 +1,4 @@
+// Package ui handles the PocketBase Admin frontend embedding.
 package ui
 
 import (
@@ -5,7 +6,7 @@ import (
 	"io/fs"
 )
 
-//go:embed all:assets
+//go:embed
 var assets embed.FS
 
 func Assets() (fs.FS, error) {

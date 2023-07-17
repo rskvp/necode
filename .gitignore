@@ -1,22 +1,78 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-__debug_bin
-ui-server
-
-.vscode/*.log
+.DS_Store
 node_modules
-e2e/storageState.json
-e2e/playwright-report
-e2e/test-results
-e2e/playwright/.cache
-e2e/.env
+/build
+/dist
+/.svelte-kit
+/package
+.env
+.env.*
+server/__pycache__/*
+web-local/src/server/duckdb
+web-local/src/server/scratch/
+server/venv/
+tsc-tmp/
+export/
+.vscode
+/temp
+/tmp
+/runtime/sql/deps
+/runtime/release
+/runtime/pkg/examples/embed/dist
+/cli/pkg/web/embed/dist
+/rill
+/cli/pkg/examples/embed/dist
+/dev-project*
 
-# Output of code generation tools
-third_party/OpenAPI/temporal
+# data files
+*.duckdb
+*.duckdb.wal
+*.db
+*.db.tmp
+*.wal
+*.parquet
+*.tsv
+/*_state.json
+/state
+/models
+/dashboards
+/sources
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# check in generated data files
+!/web-local/test/data/*.parquet
+!/web-local/test/data/*.csv
+!/web-local/test/data/*.tsv
+!/runtime/testruntime/**/*.parquet
+!/runtime/testruntime/**/*.csv
+
+# generated content
+log
+profile.log
+saved-state.json
+last-query-output.json
+staging-databases
+/rilldata
+docs/dist/
+coverage
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws
+
+dist/*
+rill-binary-sa.json
+.release-env
+# runtime test resources
+!runtime/testdata/**
+sysroot/
+latest.txt
+/web-common/coverage
+/web-local/.jest/rill-e2e-test
